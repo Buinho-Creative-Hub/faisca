@@ -224,7 +224,7 @@ let adapter=SimAdapter;
    BLOCKLY
    =================================================================== */
 if(!window.Blockly){ document.getElementById('blocklyDiv').style.display='none'; document.getElementById('fail').style.display='block'; }
-else boot();
+else setTimeout(boot,0); // boot só após o script todo carregar (evita TDZ de verif)
 
 function boot(){
   Blockly.Blocks['ao_iniciar']={init(){ this.appendDummyInput().appendField('ao iniciar');
