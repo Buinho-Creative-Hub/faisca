@@ -92,7 +92,7 @@
 
 <header>
   <div class="mark" aria-hidden="true"><span class="a"></span><span class="b"></span><span class="c"></span></div>
-  <div class="brand"><b>Faísca</b><small>blocks.buinho.education · build B4</small></div>
+  <div class="brand"><b>Faísca</b><small>blocks.buinho.education · build B5</small></div>
   <button class="btn lic" onclick="abrirDrawer()">☰ Lições</button>
   <div class="grow"></div>
   <select class="sel" id="placa" onchange="trocarPlaca()" aria-label="Placa">
@@ -390,7 +390,7 @@ let adapter=SimAdapter;
    BLOCKLY
    =================================================================== */
 if(!window.Blockly){ document.getElementById('blocklyDiv').style.display='none'; document.getElementById('fail').style.display='block'; }
-else boot();
+else setTimeout(boot,0); // boot só após o script todo carregar (evita TDZ de verif)
 
 function boot(){
   Blockly.Blocks['ao_iniciar']={init(){ this.appendDummyInput().appendField('ao iniciar');
