@@ -75,7 +75,7 @@
   #toast.win{background:var(--ok)}
   @media (max-width:860px){ main{grid-template-columns:1fr;grid-template-rows:58vh auto} .side{border-left:0;border-top:1px solid var(--linha)} }
 
-  #placa{display:none!important} #codeBtn{display:none!important}
+  #placa{display:none!important} #codeBtn{display:none!important} #connectBtn{display:none!important}
   .side{width:600px!important}
   .benchbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
   .benchbar button{border:0;border-radius:8px;padding:6px 10px;font-weight:700;cursor:pointer;background:#e9e1d2}
@@ -92,7 +92,7 @@
 
 <header>
   <div class="mark" aria-hidden="true"><span class="a"></span><span class="b"></span><span class="c"></span></div>
-  <div class="brand"><b>Faísca</b><small>blocks.buinho.education</small></div>
+  <div class="brand"><b>Faísca</b><small>blocks.buinho.education · build B3</small></div>
   <button class="btn lic" onclick="abrirDrawer()">☰ Lições</button>
   <div class="grow"></div>
   <select class="sel" id="placa" onchange="trocarPlaca()" aria-label="Placa">
@@ -118,7 +118,9 @@
       <div class="benchbar">
         <button id="wireBtn" onclick="toggleWire()">✏️ Ligar fios</button>
         <button onclick="limparFios()">limpar fios</button>
-        <span id="estado"></span>
+        <span id="estado"></span></div>
+      <div style="font-size:12px;color:#5b6079;margin:2px 0 8px">2 fios já ligados (a vermelho). Carrega ▶ Correr. Para mudar: ✏️ Ligar fios → clica 2 pontos.</div>
+      <div style="display:none">
       </div>
       <svg id="cv" viewBox="0 0 560 520" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
@@ -567,5 +569,6 @@ function log(s){ const p=document.getElementById('log'); if(p.textContent.starts
 function clearLog(){ document.getElementById('log').textContent='> à espera de correr…'; }
 let tT; function toast(m,win){ const t=document.getElementById('toast'); t.textContent=m; t.classList.toggle('win',!!win); t.classList.add('show'); clearTimeout(tT); tT=setTimeout(()=>t.classList.remove('show'),win?3200:2600); }
 </script>
+<script>window.addEventListener("load",function(){ try{ if(typeof initBench==="function" && typeof circ!=="undefined" && !circ){ initBench(); } var cb=document.getElementById("connectBtn"); if(cb)cb.style.display="none"; }catch(e){console.warn(e);} });</script>
 </body>
 </html>
