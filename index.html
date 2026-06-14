@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faísca · blocks.buinho.education</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/12.3.1/blockly.min.js"></script>
+<style>
+  :root{--creme:#FAF0E1;--painel:#FFF9F0;--azul:#2038A6;--laranja:#FA6415;--verde:#00B88A;
+    --amarelo:#F0A500;--tinta:#191d33;--tinta-suave:#5b6079;--linha:#e8ddcb;--ok:#13b365;--erro:#d23c3c;}
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{background:var(--creme);color:var(--tinta);height:100vh;display:flex;flex-direction:column;
+    font-family:"Asap","Segoe UI",system-ui,-apple-system,sans-serif}
+  button,select{font-family:inherit} :focus-visible{outline:3px solid var(--laranja);outline-offset:2px}
+  header{display:flex;align-items:center;gap:9px;padding:9px 14px;background:var(--painel);border-bottom:1px solid var(--linha);flex-wrap:wrap}
+  .mark{display:flex;gap:3px}.mark span{width:11px;height:11px;border-radius:2px}
+  .mark .a{background:var(--azul)}.mark .b{background:var(--laranja)}.mark .c{background:var(--verde)}
+  .brand b{font-size:1.05rem;letter-spacing:-.02em}.brand small{display:block;color:var(--tinta-suave);font-size:.66rem;font-weight:600}
+  .grow{flex:1}
+  .sel{border:1px solid var(--linha);border-radius:10px;padding:7px 9px;background:var(--creme);font-weight:600;font-size:.78rem;color:var(--tinta)}
+  .btn{border:0;border-radius:10px;padding:8px 13px;font-weight:700;font-size:.8rem;display:inline-flex;gap:6px;align-items:center}
+  .run{background:var(--ok);color:#fff}.stop{background:var(--creme);color:var(--tinta);border:1px solid var(--linha)}
+  .code{background:var(--creme);color:var(--tinta);border:1px solid var(--linha)}
+  .code[aria-pressed="true"]{background:var(--tinta);color:#fff;border-color:var(--tinta)}
+  .lic{background:var(--laranja);color:#fff}
+  .connect{background:var(--azul);color:#fff}.connect.on{background:var(--ok)}.connect.err{background:var(--erro)}
+  .dot{width:9px;height:9px;border-radius:50%;background:#fff6}.connect.on .dot{background:#fff}
+
+  .objbar{display:flex;align-items:center;gap:12px;padding:9px 15px;background:#fff4df;border-bottom:1px solid var(--linha)}
+  .objbar .ico{font-size:1.1rem}
+  .objbar .t small{font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--laranja)}
+  .objbar .t p{margin:1px 0 0;font-size:.85rem;font-weight:600}
+  .pill{margin-left:auto;background:var(--ok);color:#fff;font-weight:800;font-size:.74rem;padding:5px 11px;border-radius:999px;display:none}
+  .pill.show{display:inline-block}
+
+  main{flex:1;display:grid;grid-template-columns:1fr 320px;min-height:0}
+  #blocklyDiv{height:100%;width:100%} #fail{display:none;padding:30px;text-align:center;color:var(--tinta-suave)}
+  .side{border-left:1px solid var(--linha);background:var(--painel);overflow:auto;display:flex;flex-direction:column}
+  .board{margin:12px;background:#10324a;border-radius:16px;padding:14px;color:#cfe6f5;box-shadow:inset 0 0 0 2px #1d4a68}
+  .board .name{font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:#7fb8d8}
+  .chip{margin:9px auto;width:74px;height:34px;background:#0a2233;border-radius:6px;border:1px solid #1d4a68;display:grid;place-items:center;color:#7fb8d8;font-size:.54rem;letter-spacing:.08em;text-align:center}
+  .comp{display:flex;justify-content:space-around;align-items:flex-end;margin-top:4px}
+  .unit{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:.58rem;color:#9cc6dd;text-align:center}
+  .led{width:28px;height:28px;border-radius:50%;background:#2a4a5e;border:2px solid #16384c;transition:all .08s}
+  .led.on{background:var(--laranja);box-shadow:0 0 13px 4px rgba(250,100,21,.8),0 0 0 2px #ffd8b0}
+  .pbtn{width:32px;height:32px;border-radius:50%;background:#244a5e;border:3px solid #16384c;color:#cfe6f5;font-size:.5rem;user-select:none}
+  .pbtn.press{background:var(--amarelo);color:#10324a}
+  .servo{width:40px;height:40px;border-radius:50%;background:#0a2233;border:2px solid #1d4a68;position:relative}
+  .servo i{position:absolute;left:50%;top:50%;width:3px;height:17px;background:var(--verde);transform-origin:bottom center;transform:translate(-50%,-100%) rotate(0deg);transition:transform .25s}
+  .light{margin-top:10px;display:flex;align-items:center;gap:8px;font-size:.58rem;color:#9cc6dd}.light input{flex:1}
+  .codepanel{margin:0 12px 12px;display:none}.codepanel.show{display:block}
+  .codepanel pre{margin:0;background:#13162b;color:#e7ecff;border-radius:12px;padding:12px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;white-space:pre;overflow:auto}
+  .console{margin:0 12px 12px;background:#0c0f1f;border-radius:12px;border:1px solid #20264a}
+  .console .ch{display:flex;justify-content:space-between;align-items:center;padding:7px 11px;border-bottom:1px solid #20264a;color:#8a90b8;font-size:.7rem}
+  .console pre{margin:0;padding:9px 11px;height:120px;overflow:auto;color:#a9f3d4;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;line-height:1.5}
+  .console .clr{background:transparent;border:1px solid #2a335f;color:#8a90b8;border-radius:7px;padding:2px 8px;font-size:.68rem}
+
+  /* gaveta de lições */
+  #ov{position:fixed;inset:0;background:rgba(25,29,51,.4);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+  #ov.show{opacity:1;pointer-events:auto}
+  #drawer{position:fixed;top:0;left:0;bottom:0;width:min(330px,86vw);background:var(--painel);z-index:41;
+    transform:translateX(-100%);transition:.25s;box-shadow:6px 0 30px rgba(0,0,0,.2);overflow:auto}
+  #drawer.show{transform:none}
+  #drawer h2{margin:0;padding:15px 16px 8px;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-suave)}
+  .litem{display:flex;gap:11px;align-items:center;width:100%;text-align:left;border:0;background:transparent;padding:11px 14px;color:var(--tinta)}
+  .litem:hover{background:var(--creme)}.litem.atual{background:var(--azul);color:#fff}.litem.atual .num{background:#fff;color:var(--azul)}
+  .litem.bloq{opacity:.45;cursor:not-allowed}
+  .num{width:30px;height:30px;border-radius:9px;background:var(--creme);display:grid;place-items:center;font-weight:800;flex:none;border:1px solid var(--linha)}
+  .litem.feita .num{background:var(--ok);color:#fff;border-color:transparent}
+  .litem b{display:block;font-size:.9rem;line-height:1.15}.litem small{font-size:.72rem;color:var(--tinta-suave)}
+  .litem.atual small{color:#dfe4ff}
+
+  #toast{position:fixed;bottom:18px;left:50%;transform:translate(-50%,20px);background:var(--tinta);color:#fff;padding:10px 17px;border-radius:11px;font-weight:600;font-size:.84rem;opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:90vw}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  #toast.win{background:var(--ok)}
+  @media (max-width:860px){ main{grid-template-columns:1fr;grid-template-rows:58vh auto} .side{border-left:0;border-top:1px solid var(--linha)} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="mark" aria-hidden="true"><span class="a"></span><span class="b"></span><span class="c"></span></div>
+  <div class="brand"><b>Faísca</b><small>blocks.buinho.education</small></div>
+  <button class="btn lic" onclick="abrirDrawer()">☰ Lições</button>
+  <div class="grow"></div>
+  <select class="sel" id="placa" onchange="trocarPlaca()" aria-label="Placa">
+    <option value="sim">Simulador</option><option value="arduino">Arduino (USB)</option><option value="microbit">micro:bit (Bluetooth)</option>
+  </select>
+  <button class="btn connect" id="connectBtn" onclick="connect()"><span class="dot"></span><span id="connTxt">Pronto</span></button>
+  <button class="btn run" onclick="run()">▶ Correr</button>
+  <button class="btn stop" onclick="stopRun()">■ Parar</button>
+  <button class="btn code" id="codeBtn" aria-pressed="false" onclick="toggleCode()">&lt;/&gt;</button>
+</header>
+
+<div class="objbar">
+  <span class="ico">🎯</span>
+  <div class="t"><small id="licTitulo">Lição</small><p id="objetivo">—</p></div>
+  <span class="pill" id="pill">✓ concluída</span>
+</div>
+
+<main>
+  <div id="blocklyDiv"></div>
+  <div id="fail">Não consegui carregar o Blockly (precisa de internet para o CDN). No servidor do Buinho a biblioteca fica alojada localmente.</div>
+  <aside class="side">
+    <div class="board">
+      <div class="name">Placa · <span id="boardState">simulador</span></div>
+      <div class="chip" id="chip">SIMULADOR</div>
+      <div class="comp">
+        <div class="unit"><div class="led" id="led"></div>LED<br>pino 13</div>
+        <div class="unit"><button class="pbtn" id="pbtn" onmousedown="btn(1)" onmouseup="btn(0)" ontouchstart="btn(1)" ontouchend="btn(0)">PUSH</button>botão<br>pino 2</div>
+        <div class="unit"><div class="servo"><i id="servoArm"></i></div>servo<br>pino 9</div>
+      </div>
+      <div class="light">luz (A0) <input type="range" id="luz" min="0" max="1023" value="700"></div>
+    </div>
+    <div class="codepanel" id="codepanel"><pre id="code"></pre></div>
+    <div class="console"><div class="ch"><span>Monitor série</span><button class="clr" onclick="clearLog()">limpar</button></div><pre id="log">&gt; à espera de correr…</pre></div>
+  </aside>
+</main>
+
+<div id="ov" onclick="fecharDrawer()"></div>
+<nav id="drawer"><h2>Percurso · robótica de cartão</h2><div id="lista"></div></nav>
+<div id="toast" role="status"></div>
+
+<script>
+/* ===================================================================
+   FAÍSCA — Fatia 2: sistema de lições.
+   - LIÇÃO = DADOS (objetivo + blocos disponíveis + programa inicial +
+     critério de sucesso). O Magalhães autora-as; aqui é o MOTOR.
+   - VERIFICAÇÃO DE SUCESSO: o motor observa o que a placa faz durante
+     o "Correr" e decide se o objetivo foi cumprido (critério declarativo).
+   =================================================================== */
+const S = { running:false, button:0 };
+
+/* ---- LIÇÕES (dados; placeholders pedagógicos — Magalhães afina) ---- */
+const HAT = {blocks:{languageVersion:0,blocks:[{type:'ao_iniciar',x:44,y:40}]}};
+const HAT_LOOP = {blocks:{languageVersion:0,blocks:[{type:'ao_iniciar',x:44,y:40,next:{block:{type:'para_sempre'}}}]}};
+const LICOES = [
+  { titulo:"Playground", objetivo:"Brinca à vontade — todas as peças disponíveis.",
+    disponiveis:null, inicio:HAT, criterio:null },
+  { titulo:"LED a piscar", objetivo:"Faz o LED do pino 13 piscar (liga e desliga, com esperas).",
+    disponiveis:["ao_iniciar","para_sempre","esperar","ligar_led","desligar_led"],
+    inicio:HAT_LOOP, criterio:{tipo:"led_pisca", pino:13, vezes:2} },
+  { titulo:"Botão acende LED", objetivo:"Quando carregas no botão (pino 2), o LED acende; ao largar, apaga.",
+    disponiveis:["ao_iniciar","para_sempre","se_senao","se_entao","ligar_led","desligar_led","botao_premido"],
+    inicio:HAT_LOOP, criterio:{tipo:"botao_controla_led", botao:2, led:13} },
+  { titulo:"Sensor de luz", objetivo:"Acende o LED quando está escuro (nível de luz baixo) e apaga quando há luz.",
+    disponiveis:["ao_iniciar","para_sempre","se_senao","ligar_led","desligar_led","ler_luz","maior_que","numero"],
+    inicio:HAT_LOOP, criterio:{tipo:"luz_acende_led", luz:"A0", limiar:300, led:13} },
+  { titulo:"Servo a varrer", objetivo:"Move o servo (pino 9) de um lado ao outro — passa perto de 0° e de 180°.",
+    disponiveis:["ao_iniciar","repetir","para_sempre","esperar","mover_servo"],
+    inicio:HAT, criterio:{tipo:"servo_varre", pino:9, lo:20, hi:160} },
+  { titulo:"O teu robô", objetivo:"Junta tudo: sensor + motor + lógica. Construção livre.",
+    disponiveis:null, inicio:HAT, criterio:null },
+];
+const estado = { atual:1, feitas:new Set(), maxDesbloqueada:1 };
+
+/* ---- mapa bloco -> categoria (para reconstruir a caixa por lição) ---- */
+const CAT = { ao_iniciar:'Eventos',
+  para_sempre:'Controlo', repetir:'Controlo', esperar:'Controlo', se_entao:'Controlo', se_senao:'Controlo',
+  ligar_led:'Saídas', desligar_led:'Saídas', mover_servo:'Saídas', mostrar_monitor:'Saídas',
+  botao_premido:'Sensores', ler_luz:'Sensores', maior_que:'Sensores', numero:'Sensores' };
+const CATCOR = {Eventos:'#FA6415',Controlo:'#2038A6','Saídas':'#F0A500',Sensores:'#00B88A'};
+const ORDEM = ['Eventos','Controlo','Saídas','Sensores'];
+function construirToolbox(disp){
+  if(!disp) disp = Object.keys(CAT);
+  const contents = ORDEM.map(cat=>{
+    const bs = disp.filter(t=>CAT[t]===cat).map(t=>({kind:'block',type:t}));
+    return bs.length ? {kind:'category',name:cat,colour:CATCOR[cat],contents:bs} : null;
+  }).filter(Boolean);
+  return {kind:'categoryToolbox',contents};
+}
+
+/* ===================================================================
+   ADAPTADORES DE HARDWARE (Simulador / Arduino / micro:bit)
+   =================================================================== */
+const SimAdapter = { name:'Simulador', needsConnect:false,
+  async connect(){return true;}, async disconnect(){},
+  async digitalWrite(p,v){ if(+p===13) setLed(v); },
+  async servoWrite(p,a){ if(+p===9) servo(a); },
+  async digitalRead(p){ return (+p===2)?S.button:0; },
+  async analogRead(p){ return +document.getElementById('luz').value; }, async say(t){} };
+
+const ArduinoAdapter = { name:'Arduino', needsConnect:true, port:null, writer:null,
+  portState:[0,0], analog:Array(8).fill(0), digital:Array(16).fill(0),
+  async connect(){ if(!('serial' in navigator)) throw new Error('Sem Web Serial (usa Chrome/Edge, PC ou Android).');
+    this.port=await navigator.serial.requestPort(); await this.port.open({baudRate:57600});
+    this.writer=this.port.writable.getWriter(); this._read(); return true; },
+  async disconnect(){ try{this.writer&&this.writer.releaseLock(); this.port&&await this.port.close();}catch(e){} this.port=null; },
+  async _send(b){ if(this.writer) await this.writer.write(new Uint8Array(b)); },
+  async _mode(p,m){ await this._send([0xF4,p,m]); },
+  async digitalWrite(p,v){ p=+p; await this._mode(p,1); const port=p>>3,bit=p&7;
+    this.portState[port]=(this.portState[port]&~(1<<bit))|((v?1:0)<<bit);
+    await this._send([0x90|port,this.portState[port]&0x7F,(this.portState[port]>>7)&0x7F]); if(p===13) setLed(v); },
+  async servoWrite(p,a){ p=+p; await this._mode(p,4); await this._send([0xE0|(p&0x0F),a&0x7F,(a>>7)&0x7F]); if(p===9) servo(a); },
+  async digitalRead(p){ p=+p; await this._send([0xD0|(p>>3),1]); return this.digital[p]||0; },
+  async analogRead(p){ const ch=(''+p).replace('A','')|0; await this._send([0xC0|ch,1]); return this.analog[ch]||0; },
+  async say(t){},
+  async _read(){ const r=this.port.readable.getReader(); let buf=[];
+    try{ while(true){ const {value,done}=await r.read(); if(done)break;
+      for(const b of value){ buf.push(b);
+        if((buf[0]&0xF0)===0x90&&buf.length===3){ const pt=buf[0]&0x0F,val=buf[1]|(buf[2]<<7); for(let i=0;i<8;i++) this.digital[pt*8+i]=(val>>i)&1; buf=[]; }
+        else if((buf[0]&0xF0)===0xE0&&buf.length===3){ this.analog[buf[0]&0x0F]=buf[1]|(buf[2]<<7); buf=[]; }
+        else if(buf.length>3) buf.shift(); } } }catch(e){} } };
+
+const UART='6e400001-b5a3-f393-e0a9-e50e24dcca9e',RX='6e400002-b5a3-f393-e0a9-e50e24dcca9e',TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+const MicrobitAdapter = { name:'micro:bit', needsConnect:true, dev:null, rx:null, button:0, light:700,
+  async connect(){ if(!('bluetooth' in navigator)) throw new Error('Sem Web Bluetooth (usa Chrome/Edge, PC ou Android).');
+    this.dev=await navigator.bluetooth.requestDevice({filters:[{namePrefix:'BBC micro:bit'}],optionalServices:[UART]});
+    const g=await this.dev.gatt.connect(), s=await g.getPrimaryService(UART);
+    this.rx=await s.getCharacteristic(RX); const tx=await s.getCharacteristic(TX); await tx.startNotifications();
+    tx.addEventListener('characteristicvaluechanged',e=>{ const t=new TextDecoder().decode(e.target.value).trim();
+      if(t[0]==='B') this.button=+t.slice(1)||0; if(t[0]==='L') this.light=+t.slice(1)||0; }); return true; },
+  async disconnect(){ try{this.dev&&this.dev.gatt.disconnect();}catch(e){} this.dev=null; },
+  async _send(s){ if(this.rx) await this.rx.writeValue(new TextEncoder().encode(s+'\n')); },
+  async digitalWrite(p,v){ await this._send('L'+(v?1:0)); setLed(v); },
+  async servoWrite(p,a){ await this._send('S'+a); servo(a); },
+  async digitalRead(p){ return this.button; }, async analogRead(p){ return this.light; },
+  async say(t){ await this._send('T'+t); } };
+
+const ADAPTERS={sim:SimAdapter,arduino:ArduinoAdapter,microbit:MicrobitAdapter};
+let adapter=SimAdapter;
+
+/* ===================================================================
+   BLOCKLY
+   =================================================================== */
+if(!window.Blockly){ document.getElementById('blocklyDiv').style.display='none'; document.getElementById('fail').style.display='block'; }
+else boot();
+
+function boot(){
+  Blockly.Blocks['ao_iniciar']={init(){ this.appendDummyInput().appendField('ao iniciar');
+    this.setNextStatement(true,null); this.setColour('#FA6415'); this.hat='cap'; }};
+  (Blockly.defineBlocksWithJsonArray||Blockly.common.defineBlocksWithJsonArray)([
+    {type:"para_sempre",message0:"para sempre",message1:"%1",args1:[{type:"input_statement",name:"FAZER"}],previousStatement:null,nextStatement:null,colour:"#2038A6"},
+    {type:"repetir",message0:"repetir %1 vezes",args0:[{type:"field_number",name:"VEZES",value:10,min:1,precision:1}],message1:"%1",args1:[{type:"input_statement",name:"FAZER"}],previousStatement:null,nextStatement:null,colour:"#2038A6"},
+    {type:"esperar",message0:"esperar %1 s",args0:[{type:"field_number",name:"SEG",value:0.5,min:0,precision:0.1}],previousStatement:null,nextStatement:null,colour:"#2038A6",inputsInline:true},
+    {type:"se_entao",message0:"se %1",args0:[{type:"input_value",name:"COND",check:"Boolean"}],message1:"%1",args1:[{type:"input_statement",name:"FAZER"}],previousStatement:null,nextStatement:null,colour:"#2038A6"},
+    {type:"se_senao",message0:"se %1",args0:[{type:"input_value",name:"COND",check:"Boolean"}],message1:"%1",args1:[{type:"input_statement",name:"ENTAO"}],message2:"senão",message3:"%1",args3:[{type:"input_statement",name:"SENAO"}],previousStatement:null,nextStatement:null,colour:"#2038A6"},
+    {type:"ligar_led",message0:"ligar LED no pino %1",args0:[{type:"field_dropdown",name:"PIN",options:[["13","13"],["12","12"],["11","11"]]}],previousStatement:null,nextStatement:null,colour:"#F0A500",inputsInline:true},
+    {type:"desligar_led",message0:"desligar LED no pino %1",args0:[{type:"field_dropdown",name:"PIN",options:[["13","13"],["12","12"],["11","11"]]}],previousStatement:null,nextStatement:null,colour:"#F0A500",inputsInline:true},
+    {type:"mover_servo",message0:"mover servo no pino %1 para %2 °",args0:[{type:"field_dropdown",name:"PIN",options:[["9","9"],["10","10"]]},{type:"field_number",name:"ANG",value:90,min:0,max:180}],previousStatement:null,nextStatement:null,colour:"#F0A500",inputsInline:true},
+    {type:"mostrar_monitor",message0:"mostrar no monitor %1",args0:[{type:"field_input",name:"TXT",text:"olá"}],previousStatement:null,nextStatement:null,colour:"#F0A500",inputsInline:true},
+    {type:"botao_premido",message0:"botão no pino %1 premido?",args0:[{type:"field_dropdown",name:"PIN",options:[["2","2"],["3","3"]]}],output:"Boolean",colour:"#00B88A",inputsInline:true},
+    {type:"ler_luz",message0:"nível de luz (%1)",args0:[{type:"field_dropdown",name:"PIN",options:[["A0","A0"],["A1","A1"]]}],output:"Number",colour:"#00B88A",inputsInline:true},
+    {type:"maior_que",message0:"%1 > %2",args0:[{type:"input_value",name:"A",check:"Number"},{type:"input_value",name:"B",check:"Number"}],output:"Boolean",colour:"#00B88A",inputsInline:true},
+    {type:"numero",message0:"%1",args0:[{type:"field_number",name:"NUM",value:50}],output:"Number",colour:"#00B88A"},
+  ]);
+  window.ws=Blockly.inject('blocklyDiv',{toolbox:construirToolbox(null),renderer:'zelos',
+    grid:{spacing:26,length:2,colour:'#e8ddcb',snap:true},zoom:{controls:true,wheel:true,startScale:0.95},trashcan:true,scrollbars:true});
+  window.addEventListener('resize',()=>Blockly.svgResize(ws));
+  abrirLicao(1);
+}
+
+/* ===================================================================
+   CARREGADOR DE LIÇÃO
+   =================================================================== */
+function abrirLicao(i){
+  const L=LICOES[i]; if(!L || !desbloqueada(i)) return;
+  estado.atual=i;
+  ws.updateToolbox(construirToolbox(L.disponiveis));
+  Blockly.serialization.workspaces.load(L.inicio||HAT, ws);
+  document.getElementById('licTitulo').textContent = (i===0?'Livre':'Lição '+i)+' · '+L.titulo;
+  document.getElementById('objetivo').textContent = L.objetivo;
+  document.getElementById('pill').classList.toggle('show', estado.feitas.has(i));
+  resetVerif();
+  fecharDrawer(); renderLista();
+}
+function desbloqueada(i){ return i===0 || i<=estado.maxDesbloqueada || estado.feitas.has(i); }
+
+function renderLista(){
+  document.getElementById('lista').innerHTML = LICOES.map((L,i)=>{
+    const bloq=!desbloqueada(i), feita=estado.feitas.has(i), atual=i===estado.atual;
+    const cls=['litem',feita?'feita':'',bloq?'bloq':'',atual?'atual':''].join(' ');
+    const n = feita?'✓':(bloq?'🔒':(i===0?'∞':i));
+    return `<button class="${cls}" ${bloq?'disabled':''} onclick="abrirLicao(${i})">
+      <span class="num">${n}</span><span><b>${L.titulo}</b><small>${L.objetivo}</small></span></button>`;
+  }).join('');
+}
+function abrirDrawer(){ renderLista(); document.getElementById('ov').classList.add('show'); document.getElementById('drawer').classList.add('show'); }
+function fecharDrawer(){ document.getElementById('ov').classList.remove('show'); document.getElementById('drawer').classList.remove('show'); }
+
+/* ===================================================================
+   VERIFICAÇÃO DE SUCESSO (observa eventos de hardware durante o Correr)
+   =================================================================== */
+let verif = {ativa:false, st:{}};
+function resetVerif(){ verif = {ativa:false, st:{ultimoLed:0, min:999, max:-999, onPress:false, offRel:false, escuroOn:false, claroOff:false, blinks:0}}; }
+function lerLuz(){ return +document.getElementById('luz').value; }
+function emitHW(ev){
+  if(!verif.ativa) return;
+  const c=LICOES[estado.atual].criterio; if(!c) return; const st=verif.st;
+  if(c.tipo==='led_pisca' && ev.t==='led' && ev.pin===c.pino){
+    if(ev.v===0 && st.ultimoLed===1){ st.blinks++; } st.ultimoLed=ev.v;
+    if(st.blinks>=c.vezes) concluir();
+  }
+  else if(c.tipo==='botao_controla_led' && ev.t==='led' && ev.pin===c.led){
+    if(ev.v===1 && ev.btn===1) st.onPress=true;
+    if(ev.v===0 && ev.btn===0) st.offRel=true;
+    if(st.onPress && st.offRel) concluir();
+  }
+  else if(c.tipo==='luz_acende_led' && ev.t==='led' && ev.pin===c.led){
+    if(ev.v===1 && ev.luz < c.limiar) st.escuroOn=true;
+    if(ev.v===0 && ev.luz >= c.limiar) st.claroOff=true;
+    if(st.escuroOn && st.claroOff) concluir();
+  }
+  else if(c.tipo==='servo_varre' && ev.t==='servo'){
+    st.min=Math.min(st.min,ev.ang); st.max=Math.max(st.max,ev.ang);
+    if(st.min<=c.lo && st.max>=c.hi) concluir();
+  }
+}
+function concluir(){
+  const i=estado.atual; if(estado.feitas.has(i)) return;
+  estado.feitas.add(i); estado.maxDesbloqueada=Math.max(estado.maxDesbloqueada,i+1);
+  document.getElementById('pill').classList.add('show');
+  verif.ativa=false; toast('✓ Lição concluída! '+(LICOES[i+1]?'Desbloqueaste: '+LICOES[i+1].titulo:''), true);
+  log('✓ objectivo cumprido');
+  renderLista();
+}
+
+/* ===================================================================
+   INTERPRETADOR
+   =================================================================== */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function hi(b){ ws.highlightBlock(b?b.id:null); }
+async function execChain(b){ for(;b&&S.running;b=b.getNextBlock()) await execBlock(b); }
+async function execBlock(b){ hi(b);
+  switch(b.type){
+    case 'para_sempre': while(S.running){ await execChain(b.getInputTargetBlock('FAZER')); await sleep(40);} break;
+    case 'repetir':{ const n=+b.getFieldValue('VEZES')||0; for(let i=0;i<n&&S.running;i++){ await execChain(b.getInputTargetBlock('FAZER')); await sleep(15);} break; }
+    case 'esperar': await sleep((+b.getFieldValue('SEG')||0)*1000); break;
+    case 'ligar_led':{ const p=+b.getFieldValue('PIN'); await adapter.digitalWrite(p,1); log('digitalWrite('+p+', HIGH)'); emitHW({t:'led',pin:p,v:1,btn:S.button,luz:lerLuz()}); break; }
+    case 'desligar_led':{ const p=+b.getFieldValue('PIN'); await adapter.digitalWrite(p,0); log('digitalWrite('+p+', LOW)'); emitHW({t:'led',pin:p,v:0,btn:S.button,luz:lerLuz()}); break; }
+    case 'mover_servo':{ const a=+b.getFieldValue('ANG'); await adapter.servoWrite(b.getFieldValue('PIN'),a); log('servo → '+a+'°'); emitHW({t:'servo',ang:a}); break; }
+    case 'mostrar_monitor':{ const t=b.getFieldValue('TXT'); await adapter.say(t); log('> '+t); break; }
+    case 'se_entao': if(await evalBool(b.getInputTargetBlock('COND'))) await execChain(b.getInputTargetBlock('FAZER')); break;
+    case 'se_senao': if(await evalBool(b.getInputTargetBlock('COND'))) await execChain(b.getInputTargetBlock('ENTAO')); else await execChain(b.getInputTargetBlock('SENAO')); break;
+  }
+}
+async function evalBool(b){ if(!b) return false;
+  if(b.type==='botao_premido') return (await adapter.digitalRead(b.getFieldValue('PIN')))===1;
+  if(b.type==='maior_que') return (await evalNum(b.getInputTargetBlock('A')))>(await evalNum(b.getInputTargetBlock('B'))); return false; }
+async function evalNum(b){ if(!b) return 0;
+  if(b.type==='numero') return +b.getFieldValue('NUM');
+  if(b.type==='ler_luz') return await adapter.analogRead(b.getFieldValue('PIN')); return 0; }
+
+async function run(){
+  if(S.running) return;
+  if(adapter.needsConnect && !(adapter.port||adapter.dev)){ toast('Liga a placa primeiro (botão azul).'); return; }
+  const top=ws.getTopBlocks(true).find(x=>x.type==='ao_iniciar');
+  if(!top){ toast('Começa com o bloco “ao iniciar”.'); return; }
+  S.running=true; resetVerif(); verif.ativa = !!LICOES[estado.atual].criterio;
+  log('▶ a correr no '+adapter.name);
+  try{ await execChain(top.getNextBlock()); }catch(e){ log('⚠ '+e.message); }
+  hi(null); S.running=false;
+}
+function stopRun(){ S.running=false; hi(null); setLed(0); }
+
+/* ===================================================================
+   PLACA / LIGAÇÃO / UI
+   =================================================================== */
+function setLed(v){ document.getElementById('led').classList.toggle('on',!!v); }
+function servo(a){ document.getElementById('servoArm').style.transform='translate(-50%,-100%) rotate('+a+'deg)'; }
+function btn(v){ S.button=v; document.getElementById('pbtn').classList.toggle('press',!!v); }
+function trocarPlaca(){
+  if(adapter&&adapter.needsConnect&&(adapter.port||adapter.dev)) adapter.disconnect();
+  const k=document.getElementById('placa').value; adapter=ADAPTERS[k];
+  const b=document.getElementById('connectBtn'); b.classList.remove('on','err');
+  document.getElementById('connTxt').textContent=adapter.needsConnect?('Ligar '+adapter.name):'Pronto';
+  document.getElementById('boardState').textContent=adapter.name.toLowerCase();
+  document.getElementById('chip').textContent=({sim:'SIMULADOR',arduino:'ARDUINO UNO',microbit:'BBC micro:bit'})[k];
+}
+async function connect(){
+  if(!adapter.needsConnect){ toast('Simulador está sempre pronto.'); return; }
+  const b=document.getElementById('connectBtn');
+  if(adapter.port||adapter.dev){ await adapter.disconnect(); b.classList.remove('on'); document.getElementById('connTxt').textContent='Ligar '+adapter.name; toast('Placa desligada'); return; }
+  try{ toast('A pedir a placa…'); await adapter.connect(); b.classList.remove('err'); b.classList.add('on');
+    document.getElementById('connTxt').textContent=adapter.name+' ligado'; document.getElementById('boardState').textContent=adapter.name.toLowerCase()+' (ligado)';
+    log('# ligado a '+adapter.name); toast('✓ '+adapter.name+' ligado'); }
+  catch(e){ b.classList.add('err'); document.getElementById('connTxt').textContent='Falhou'; toast('✗ '+e.message); log('⚠ '+e.message); }
+}
+function toggleCode(){ const btn=document.getElementById('codeBtn'); const on=btn.getAttribute('aria-pressed')!=='true';
+  btn.setAttribute('aria-pressed',on); document.getElementById('codepanel').classList.toggle('show',on); if(on) document.getElementById('code').textContent=gerarCodigo(); }
+function gerarCodigo(){ const top=window.ws&&ws.getTopBlocks(true).find(x=>x.type==='ao_iniciar'); if(!top) return '// monta um programa'; const L=[];
+  (function walk(b,ind){ for(;b;b=b.getNextBlock()){ const t='  '.repeat(ind);
+    if(b.type==='ligar_led') L.push(t+'digitalWrite('+b.getFieldValue('PIN')+', HIGH);');
+    else if(b.type==='desligar_led') L.push(t+'digitalWrite('+b.getFieldValue('PIN')+', LOW);');
+    else if(b.type==='esperar') L.push(t+'delay('+Math.round((+b.getFieldValue('SEG'))*1000)+');');
+    else if(b.type==='mover_servo') L.push(t+'servo.write('+b.getFieldValue('ANG')+');');
+    else if(b.type==='mostrar_monitor') L.push(t+'Serial.println("'+b.getFieldValue('TXT')+'");');
+    else if(b.type==='para_sempre'){ L.push(t+'while (true) {'); walk(b.getInputTargetBlock('FAZER'),ind+1); L.push(t+'}'); }
+    else if(b.type==='repetir'){ L.push(t+'for (int i=0;i<'+b.getFieldValue('VEZES')+';i++) {'); walk(b.getInputTargetBlock('FAZER'),ind+1); L.push(t+'}'); }
+    else if(b.type==='se_entao'){ L.push(t+'if ('+cond(b)+') {'); walk(b.getInputTargetBlock('FAZER'),ind+1); L.push(t+'}'); }
+    else if(b.type==='se_senao'){ L.push(t+'if ('+cond(b)+') {'); walk(b.getInputTargetBlock('ENTAO'),ind+1); L.push(t+'} else {'); walk(b.getInputTargetBlock('SENAO'),ind+1); L.push(t+'}'); }
+  }})(top.getNextBlock(),1);
+  return 'void setup() {\n  pinMode(13, OUTPUT); pinMode(2, INPUT);\n}\n\nvoid loop() {\n'+(L.join('\n')||'  // vazio')+'\n}'; }
+function cond(b){ const c=b.getInputTargetBlock('COND'); if(!c) return 'false';
+  if(c.type==='botao_premido') return 'digitalRead('+c.getFieldValue('PIN')+') == HIGH';
+  if(c.type==='maior_que'){ const n=x=>{const t=c.getInputTargetBlock(x); return !t?'0':(t.type==='numero'?t.getFieldValue('NUM'):'analogRead('+t.getFieldValue('PIN')+')');}; return n('A')+' > '+n('B'); } return 'false'; }
+function log(s){ const p=document.getElementById('log'); if(p.textContent.startsWith('>')) p.textContent=''; p.textContent+=(p.textContent?'\n':'')+s; p.scrollTop=p.scrollHeight; }
+function clearLog(){ document.getElementById('log').textContent='> à espera de correr…'; }
+let tT; function toast(m,win){ const t=document.getElementById('toast'); t.textContent=m; t.classList.toggle('win',!!win); t.classList.add('show'); clearTimeout(tT); tT=setTimeout(()=>t.classList.remove('show'),win?3200:2600); }
+</script>
+</body>
+</html>
