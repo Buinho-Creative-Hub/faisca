@@ -320,7 +320,7 @@ function concluir(){
    INTERPRETADOR
    =================================================================== */
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-function hi(b){ ws.highlightBlock(b?b.id:null); }
+function hi(b){ try{ if(ws&&typeof ws.highlightBlock==="function") ws.highlightBlock(b?b.id:null); }catch(e){} }
 async function execChain(b){ for(;b&&S.running;b=b.getNextBlock()) await execBlock(b); }
 async function execBlock(b){ hi(b);
   switch(b.type){
