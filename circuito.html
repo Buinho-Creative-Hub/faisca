@@ -92,7 +92,7 @@
 
 <header>
   <div class="mark" aria-hidden="true"><span class="a"></span><span class="b"></span><span class="c"></span></div>
-  <div class="brand"><b>Faísca</b><small>blocks.buinho.education · build B5</small></div>
+  <div class="brand"><b>Faísca</b><small>blocks.buinho.education · build B6</small></div>
   <button class="btn lic" onclick="abrirDrawer()">☰ Lições</button>
   <div class="grow"></div>
   <select class="sel" id="placa" onchange="trocarPlaca()" aria-label="Placa">
@@ -206,42 +206,42 @@ if(typeof window!=='undefined'){ window.NET={makeCircuit}; }
 
 </script>
 <script>
-/* BANCADA (integrada) — geometria + render + interação. setLed é redefinido no app p/ chamar refreshLED. */
-const PITCH=26, X0=70, COLS=8;
+/* BANCADA multi-LED — exercícios de LED (pisca, rápido, 2 LEDs, semáforo, SOS, livre) */
+const PITCH=26, X0=70, COLS=12;
 const ROWY={ a:120,b:146,c:172,d:198,e:224, f:300,g:326,h:352,i:378,j:404, 'railT+':40,'railT-':62,'railB+':462,'railB-':484 };
 const colX=c=>X0+(c-1)*PITCH;
+const COR={ vermelho:{on:'#ff5a2a',off:'#7a2f2f'}, amarelo:{on:'#ffd23a',off:'#6e5f1c'}, verde:{on:'#36d07a',off:'#1d5b3a'}, azul:{on:'#4da3ff',off:'#244b6e'} };
 const coord={};
-let circ=null, pinState={'13':0}, wiring=false, pending=null;
-
+let circ=null, pinState={13:0,12:0,11:0}, wiring=false, pending=null, EX={leds:[{pin:13,cor:'vermelho',slot:0}]};
+function slotHoles(s){ const base=2+s*3; return { res1:'bb:T:'+base+':a', res2:'bb:T:'+(base+1)+':a', anode:'bb:T:'+(base+1)+':c', cathode:'bb:T:'+(base+2)+':c' }; }
 function rebuild(){
-  circ=makeCircuit(); circ.breadboard(COLS);
-  ['T+','T-','B+','B-'].forEach(r=>circ.rail(r));
-  ['13','GND','5V','A0','12','2'].forEach(p=>circ.pin(p));
-  circ.leadInHole('res:1','bb:T:3:a'); circ.leadInHole('res:2','bb:T:5:a'); circ.resistor('res:1','res:2');
-  circ.leadInHole('led:A','bb:T:5:c'); circ.leadInHole('led:K','bb:T:7:c'); circ.led('led:A','led:K');
+  circ=makeCircuit(); circ.breadboard(COLS); ['T+','T-','B+','B-'].forEach(r=>circ.rail(r));
+  [13,12,11,'GND','5V','A0',2].forEach(p=>circ.pin(''+p));
+  EX.leds.forEach((L,i)=>{ const h=slotHoles(L.slot); L.h=h;
+    circ.leadInHole('res:'+i+':1',h.res1); circ.leadInHole('res:'+i+':2',h.res2); circ.resistor('res:'+i+':1','res:'+i+':2');
+    circ.leadInHole('led:'+i+':A',h.anode); circ.leadInHole('led:'+i+':K',h.cathode); circ.led('led:'+i+':A','led:'+i+':K'); });
 }
 function svgEl(t,a){ const e=document.createElementNS('http://www.w3.org/2000/svg',t); for(const k in a)e.setAttribute(k,a[k]); return e; }
 function render(){
   const cv=document.getElementById('cv'); if(!cv) return; cv.innerHTML='';
-  cv.appendChild(svgEl('rect',{x:40,y:96,width:COLS*PITCH+40,height:152,rx:10,fill:'#f3f0e6',stroke:'#d9cfb6'}));
-  cv.appendChild(svgEl('rect',{x:40,y:282,width:COLS*PITCH+40,height:152,rx:10,fill:'#f3f0e6',stroke:'#d9cfb6'}));
-  cv.appendChild(svgEl('rect',{x:40,y:250,width:COLS*PITCH+40,height:28,fill:'#e7e0cf'}));
+  cv.appendChild(svgEl('rect',{x:40,y:96,width:COLS*PITCH+30,height:152,rx:10,fill:'#f3f0e6',stroke:'#d9cfb6'}));
+  cv.appendChild(svgEl('rect',{x:40,y:282,width:COLS*PITCH+30,height:152,rx:10,fill:'#f3f0e6',stroke:'#d9cfb6'}));
+  cv.appendChild(svgEl('rect',{x:40,y:250,width:COLS*PITCH+30,height:28,fill:'#e7e0cf'}));
   const ROWS={T:['a','b','c','d','e'],B:['f','g','h','i','j']};
   for(const half of ['T','B']) for(let c=1;c<=COLS;c++) for(const r of ROWS[half]){
     const id='bb:'+half+':'+c+':'+r, x=colX(c), y=ROWY[r]; coord[id]={x,y};
-    const h=svgEl('circle',{cx:x,cy:y,r:5,class:'hole','data-id':id}); h.onclick=()=>clickNode(id); cv.appendChild(h);
-  }
+    const h=svgEl('circle',{cx:x,cy:y,r:5,class:'hole','data-id':id}); h.onclick=()=>clickNode(id); cv.appendChild(h); }
   [['T+','#d23c3c'],['T-','#2b6fd2'],['B+','#d23c3c'],['B-','#2b6fd2']].forEach(p=>{ const nm=p[0],col=p[1];
     const y=ROWY['rail'+nm], id='rail:'+nm; coord[id]={x:colX(1),y};
     cv.appendChild(svgEl('line',{x1:colX(1)-6,y1:y,x2:colX(COLS)+6,y2:y,stroke:col,'stroke-width':2,opacity:.5}));
     for(let c=1;c<=COLS;c++){ const x=colX(c); const h=svgEl('circle',{cx:x,cy:y,r:5,class:'hole','data-id':id}); h.onclick=()=>clickNode(id); cv.appendChild(h);} });
-  const ay=498, pins=['13','12','GND','5V','A0','2'];
-  cv.appendChild(svgEl('rect',{x:40,y:ay-6,width:COLS*PITCH+40,height:20,rx:6,fill:'#0a7f5b',opacity:.12}));
+  const ay=498, pins=['13','12','11','GND','5V','A0','2'];
+  cv.appendChild(svgEl('rect',{x:40,y:ay-6,width:COLS*PITCH+30,height:20,rx:6,fill:'#0a7f5b',opacity:.12}));
   pins.forEach((p,i)=>{ const x=colX(1)+i*((COLS-1)*PITCH/(pins.length-1)), id='ard:'+p; coord[id]={x,y:ay};
     const pin=svgEl('circle',{cx:x,cy:ay,r:7,class:'pin','data-id':id}); pin.onclick=()=>clickNode(id); cv.appendChild(pin);
     cv.appendChild(svgEl('text',{x,y:ay+22,class:'pinlbl'})).textContent=p; });
   cv.appendChild(svgEl('text',{x:48,y:ay-14,class:'lbl','text-anchor':'start'})).textContent='ARDUINO';
-  drawResistor('bb:T:3:a','bb:T:5:a'); drawLED('bb:T:5:c','bb:T:7:c');
+  EX.leds.forEach((L,i)=>{ drawResistor(L.h.res1,L.h.res2); drawLED(i,L.h.anode,L.h.cathode,(COR[L.cor]||COR.vermelho).off); });
   for(const w of circ.wires) drawWire(w);
   refreshLED();
 }
@@ -249,12 +249,12 @@ function drawResistor(h1,h2){ const cv=document.getElementById('cv'),a=coord[h1]
   cv.appendChild(svgEl('line',{x1:a.x,y1:a.y,x2:a.x,y2:a.y-26,class:'leg'}));
   cv.appendChild(svgEl('line',{x1:b.x,y1:b.y,x2:b.x,y2:b.y-26,class:'leg'}));
   cv.appendChild(svgEl('rect',{x:Math.min(a.x,b.x)+4,y:a.y-36,width:Math.abs(b.x-a.x)-8,height:16,rx:5,fill:'#caa46a',stroke:'#7a5b00'}));
-  cv.appendChild(svgEl('text',{x:(a.x+b.x)/2,y:a.y-42,class:'lbl'})).textContent='220Ω'; }
-function drawLED(hA,hK){ const cv=document.getElementById('cv'),a=coord[hA],k=coord[hK];
+  cv.appendChild(svgEl('text',{x:(a.x+b.x)/2,y:a.y-42,class:'lbl'})).textContent='220'; }
+function drawLED(i,hA,hK,offcol){ const cv=document.getElementById('cv'),a=coord[hA],k=coord[hK];
   cv.appendChild(svgEl('line',{x1:a.x,y1:a.y,x2:a.x,y2:a.y-30,class:'leg'}));
   cv.appendChild(svgEl('line',{x1:k.x,y1:k.y,x2:k.x,y2:k.y-30,class:'leg'}));
   const cx=(a.x+k.x)/2, cy=a.y-40;
-  cv.appendChild(svgEl('circle',{cx,cy,r:11,class:'ledbody',id:'ledDot',fill:'#7a2f2f'}));
+  cv.appendChild(svgEl('circle',{cx,cy,r:11,class:'ledbody',id:'ledDot'+i,fill:offcol}));
   cv.appendChild(svgEl('text',{x:cx,y:cy-16,class:'lbl'})).textContent='LED'; }
 function drawWire(w){ const cv=document.getElementById('cv'),a=coord[w.a],b=coord[w.b]; if(!a||!b)return;
   const ln=svgEl('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:'wireln'});
@@ -268,17 +268,27 @@ function markSel(id,on){ document.querySelectorAll('[data-id="'+id+'"]').forEach
 function toggleWire(){ wiring=!wiring; pending=null; const b=document.getElementById('wireBtn'); if(b)b.classList.toggle('active',wiring); render(); }
 function limparFios(){ circ.wires.length=0; rearm(); render(); }
 function rearm(){ const keep=circ.wires.slice(); rebuild(); for(const w of keep) circ.addWire(w.a,w.b); circ.wires.length=0; circ.wires.push(...keep); }
+function setPin(p,v){ pinState[p]=v?1:0; refreshLED(); }
 function refreshLED(){ if(!circ) return;
-  const hot = pinState['13'] ? ['ard:13'] : [];
-  const res = circ.ledOn('led:A','led:K',hot);
-  const dot=document.getElementById('ledDot'); const lit = res.on && pinState['13'];
-  if(dot){ dot.setAttribute('fill', lit?'#ff5a2a':'#7a2f2f'); dot.setAttribute('filter', lit?'drop-shadow(0 0 10px #ff7a3a)':''); }
+  EX.leds.forEach((L,i)=>{ const hot = pinState[L.pin] ? ['ard:'+L.pin] : [];
+    const res = circ.ledOn('led:'+i+':A','led:'+i+':K',hot);
+    const dot=document.getElementById('ledDot'+i); const lit = res.on && pinState[L.pin]; const cor=COR[L.cor]||COR.vermelho;
+    if(dot){ dot.setAttribute('fill', lit?cor.on:cor.off); dot.setAttribute('filter', lit?('drop-shadow(0 0 9px '+cor.on+')'):''); } });
   const est=document.getElementById('estado'); if(!est) return;
   if(!circ.wires.length){ est.textContent='Sem fios.'; est.className=''; return; }
-  const s=circ.ledOn('led:A','led:K',['ard:13']);
-  est.textContent = s.on?(s.warn?'⚠ '+s.reason:'✓ '+s.reason):s.reason;
-  est.className = s.on?(s.warn?'bad':'ok'):'bad'; }
-function initBench(){ rebuild(); circ.addWire('ard:13','bb:T:3:b'); circ.addWire('ard:GND','bb:T:7:b'); render(); }
+  let allok=true, warn=false;
+  EX.leds.forEach((L,i)=>{ const sc=circ.ledOn('led:'+i+':A','led:'+i+':K',['ard:'+L.pin]); if(!sc.on)allok=false; if(sc.warn)warn=true; });
+  est.textContent = allok?(warn?'⚠ acende, mas falta resistência':'✓ Circuito correcto'):'Liga: pino → resistência → LED → GND';
+  est.className = allok?(warn?'bad':'ok'):'bad'; }
+function montarCircuito(cfg){ EX = cfg || {leds:[{pin:13,cor:'vermelho',slot:0}]}; rebuild();
+  EX.leds.forEach((L,i)=>{ circ.addWire('ard:'+L.pin, L.h.res1); circ.addWire('ard:GND', L.h.cathode); }); render(); }
+function _stack(arr){ for(let i=0;i<arr.length-1;i++) arr[i].next={block:arr[i+1]}; return arr[0]; }
+function _blk(type,fields,body){ const b={type}; if(fields)b.fields=fields; if(body&&body.length)b.inputs={FAZER:{block:_stack(body)}}; return b; }
+function programa(body){ return {blocks:{languageVersion:0,blocks:[{type:'ao_iniciar',x:40,y:30,next:{block:_blk('para_sempre',null,body)}}]}}; }
+function L_on(p){return _blk('ligar_led',{PIN:''+p});}
+function L_off(p){return _blk('desligar_led',{PIN:''+p});}
+function L_wait(s){return _blk('esperar',{SEG:s});}
+function L_rep(n,body){return _blk('repetir',{VEZES:n},body);}
 
 </script>
 
@@ -298,27 +308,36 @@ const S = { running:false, button:0 };
 
 /* ---- LIÇÕES (dados; placeholders pedagógicos — Magalhães afina) ---- */
 const HAT = {blocks:{languageVersion:0,blocks:[{type:'ao_iniciar',x:44,y:40}]}};
-const HAT_LOOP = {blocks:{languageVersion:0,blocks:[{type:'ao_iniciar',x:44,y:40,next:{block:{type:'para_sempre'}}}]}};
-const PROG_BLINK={"blocks": {"languageVersion": 0, "blocks": [{"type": "ao_iniciar", "x": 40, "y": 30, "next": {"block": {"type": "para_sempre", "inputs": {"FAZER": {"block": {"type": "ligar_led", "fields": {"PIN": "13"}, "next": {"block": {"type": "esperar", "fields": {"SEG": 0.5}, "next": {"block": {"type": "desligar_led", "fields": {"PIN": "13"}, "next": {"block": {"type": "esperar", "fields": {"SEG": 0.5}}}}}}}}}}}}}]}};
 const LICOES = [
-  { titulo:"Playground", objetivo:"Brinca à vontade — todas as peças disponíveis.",
-    disponiveis:null, inicio:HAT, criterio:null },
-  { titulo:"LED a piscar", objetivo:"Faz o LED do pino 13 piscar (liga e desliga, com esperas).",
-    disponiveis:["ao_iniciar","para_sempre","esperar","ligar_led","desligar_led"],
-    inicio:HAT_LOOP, criterio:{tipo:"led_pisca", pino:13, vezes:2} },
-  { titulo:"Botão acende LED", objetivo:"Quando carregas no botão (pino 2), o LED acende; ao largar, apaga.",
-    disponiveis:["ao_iniciar","para_sempre","se_senao","se_entao","ligar_led","desligar_led","botao_premido"],
-    inicio:HAT_LOOP, criterio:{tipo:"botao_controla_led", botao:2, led:13} },
-  { titulo:"Sensor de luz", objetivo:"Acende o LED quando está escuro (nível de luz baixo) e apaga quando há luz.",
-    disponiveis:["ao_iniciar","para_sempre","se_senao","ligar_led","desligar_led","ler_luz","maior_que","numero"],
-    inicio:HAT_LOOP, criterio:{tipo:"luz_acende_led", luz:"A0", limiar:300, led:13} },
-  { titulo:"Servo a varrer", objetivo:"Move o servo (pino 9) de um lado ao outro — passa perto de 0° e de 180°.",
-    disponiveis:["ao_iniciar","repetir","para_sempre","esperar","mover_servo"],
-    inicio:HAT, criterio:{tipo:"servo_varre", pino:9, lo:20, hi:160} },
-  { titulo:"O teu robô", objetivo:"Junta tudo: sensor + motor + lógica. Construção livre.",
-    disponiveis:null, inicio:HAT, criterio:null },
+  { titulo:"Construção livre", objetivo:"Brinca à vontade com um LED no pino 13.",
+    disponiveis:null, circuito:{leds:[{pin:13,cor:'vermelho',slot:0}]}, inicio:HAT, criterio:null },
+  { titulo:"Pisca", objetivo:"Faz o LED do pino 13 piscar (liga, espera, desliga, espera).",
+    disponiveis:['ao_iniciar','para_sempre','repetir','esperar','ligar_led','desligar_led'],
+    circuito:{leds:[{pin:13,cor:'vermelho',slot:0}]},
+    inicio:programa([L_on(13),L_wait(0.5),L_off(13),L_wait(0.5)]),
+    criterio:{tipo:'leds',pinos:[13],vezes:2} },
+  { titulo:"Pisca rápido", objetivo:"O mesmo, mas muito mais depressa (0.1 s).",
+    disponiveis:['ao_iniciar','para_sempre','repetir','esperar','ligar_led','desligar_led'],
+    circuito:{leds:[{pin:13,cor:'vermelho',slot:0}]},
+    inicio:programa([L_on(13),L_wait(0.1),L_off(13),L_wait(0.1)]),
+    criterio:{tipo:'leds',pinos:[13],vezes:3} },
+  { titulo:"Dois LEDs a alternar", objetivo:"Enquanto um acende, o outro apaga (pinos 13 e 12).",
+    disponiveis:['ao_iniciar','para_sempre','repetir','esperar','ligar_led','desligar_led'],
+    circuito:{leds:[{pin:13,cor:'vermelho',slot:0},{pin:12,cor:'azul',slot:1}]},
+    inicio:programa([L_on(13),L_off(12),L_wait(0.4),L_off(13),L_on(12),L_wait(0.4)]),
+    criterio:{tipo:'leds',pinos:[13,12],vezes:2} },
+  { titulo:"Semáforo", objetivo:"Vermelho (13), verde (11) e amarelo (12) em sequência.",
+    disponiveis:['ao_iniciar','para_sempre','repetir','esperar','ligar_led','desligar_led'],
+    circuito:{leds:[{pin:13,cor:'vermelho',slot:0},{pin:12,cor:'amarelo',slot:1},{pin:11,cor:'verde',slot:2}]},
+    inicio:programa([L_on(13),L_wait(1),L_off(13),L_on(11),L_wait(1),L_off(11),L_on(12),L_wait(0.4),L_off(12)]),
+    criterio:{tipo:'leds',pinos:[13,12,11],vezes:1} },
+  { titulo:"SOS em morse", objetivo:"Três curtas, três longas, três curtas (pino 13).",
+    disponiveis:['ao_iniciar','para_sempre','repetir','esperar','ligar_led','desligar_led'],
+    circuito:{leds:[{pin:13,cor:'vermelho',slot:0}]},
+    inicio:programa([L_rep(3,[L_on(13),L_wait(0.2),L_off(13),L_wait(0.2)]),L_wait(0.4),L_rep(3,[L_on(13),L_wait(0.6),L_off(13),L_wait(0.2)]),L_wait(0.4),L_rep(3,[L_on(13),L_wait(0.2),L_off(13),L_wait(0.2)]),L_wait(1)]),
+    criterio:{tipo:'leds',pinos:[13],vezes:6} },
 ];
-const estado = { atual:1, feitas:new Set(), maxDesbloqueada:1 };
+const estado = { atual:1, feitas:new Set(), maxDesbloqueada:99 };
 
 /* ---- mapa bloco -> categoria (para reconstruir a caixa por lição) ---- */
 const CAT = { ao_iniciar:'Eventos',
@@ -341,7 +360,7 @@ function construirToolbox(disp){
    =================================================================== */
 const SimAdapter = { name:'Simulador', needsConnect:false,
   async connect(){return true;}, async disconnect(){},
-  async digitalWrite(p,v){ if(+p===13) setLed(v); },
+  async digitalWrite(p,v){ if(typeof setPin==='function') setPin(+p,v); },
   async servoWrite(p,a){ if(+p===9) servo(a); },
   async digitalRead(p){ return (+p===2)?S.button:0; },
   async analogRead(p){ return +document.getElementById('luz').value; }, async say(t){} };
@@ -415,8 +434,6 @@ function boot(){
   window.addEventListener('resize',()=>Blockly.svgResize(ws));
   abrirLicao(1);
   document.getElementById('connectBtn').style.display = adapter.needsConnect?'':'none';
-  try{ Blockly.serialization.workspaces.load(PROG_BLINK, ws); }catch(e){}
-  initBench();
 }
 
 /* ===================================================================
@@ -427,6 +444,7 @@ function abrirLicao(i){
   estado.atual=i;
   ws.updateToolbox(construirToolbox(L.disponiveis));
   Blockly.serialization.workspaces.load(L.inicio||HAT, ws);
+  if(typeof montarCircuito==='function') montarCircuito(L.circuito);
   document.getElementById('licTitulo').textContent = (i===0?'Livre':'Lição '+i)+' · '+L.titulo;
   document.getElementById('objetivo').textContent = L.objetivo;
   document.getElementById('pill').classList.toggle('show', estado.feitas.has(i));
@@ -456,7 +474,13 @@ function lerLuz(){ return +document.getElementById('luz').value; }
 function emitHW(ev){
   if(!verif.ativa) return;
   const c=LICOES[estado.atual].criterio; if(!c) return; const st=verif.st;
-  if(c.tipo==='led_pisca' && ev.t==='led' && ev.pin===c.pino){
+  if(c.tipo==='leds' && ev.t==='led'){
+    st.cnt=st.cnt||{}; st.last=st.last||{};
+    if(ev.v===0 && st.last[ev.pin]===1) st.cnt[ev.pin]=(st.cnt[ev.pin]||0)+1;
+    st.last[ev.pin]=ev.v;
+    if(c.pinos.every(p=>(st.cnt[p]||0)>=c.vezes)) concluir();
+  }
+  else if(c.tipo==='led_pisca' && ev.t==='led' && ev.pin===c.pino){
     if(ev.v===0 && st.ultimoLed===1){ st.blinks++; } st.ultimoLed=ev.v;
     if(st.blinks>=c.vezes) concluir();
   }
@@ -520,13 +544,13 @@ async function run(){
   try{ await execChain(top.getNextBlock()); }catch(e){ log('⚠ '+e.message); toast('Erro: '+e.message); }
   hi(null); S.running=false;
 }
-function stopRun(){ S.running=false; hi(null); if(typeof pinState!=='undefined'){ pinState['13']=0; if(typeof refreshLED==='function') refreshLED(); } }
+function stopRun(){ S.running=false; hi(null); if(typeof pinState!=='undefined'){ Object.keys(pinState).forEach(k=>pinState[k]=0); if(typeof refreshLED==='function') refreshLED(); } }
 
 /* ===================================================================
    PLACA / LIGAÇÃO / UI
    =================================================================== */
 let _ledTimer=null;
-function setLed(v){ if(typeof pinState!=='undefined'){ pinState['13']=v?1:0; if(typeof refreshLED==='function') refreshLED(); } }
+function setLed(v){ if(typeof setPin==='function') setPin(13,v); }
 function servo(a){ document.getElementById('servoArm').style.transform='translate(-50%,-100%) rotate('+a+'deg)'; }
 function btn(v){ S.button=v; document.getElementById('pbtn').classList.toggle('press',!!v); }
 function trocarPlaca(){
@@ -569,6 +593,6 @@ function log(s){ const p=document.getElementById('log'); if(p.textContent.starts
 function clearLog(){ document.getElementById('log').textContent='> à espera de correr…'; }
 let tT; function toast(m,win){ const t=document.getElementById('toast'); t.textContent=m; t.classList.toggle('win',!!win); t.classList.add('show'); clearTimeout(tT); tT=setTimeout(()=>t.classList.remove('show'),win?3200:2600); }
 </script>
-<script>window.addEventListener("load",function(){ try{ if(typeof initBench==="function" && typeof circ!=="undefined" && !circ){ initBench(); } var cb=document.getElementById("connectBtn"); if(cb)cb.style.display="none"; }catch(e){console.warn(e);} });</script>
+<script>window.addEventListener("load",function(){ try{ if(typeof circ!=="undefined" && !circ && typeof abrirLicao==="function"){ abrirLicao((typeof estado!=="undefined"&&estado.atual)||1); } var cb=document.getElementById("connectBtn"); if(cb)cb.style.display="none"; }catch(e){console.warn(e);} });</script>
 </body>
 </html>
