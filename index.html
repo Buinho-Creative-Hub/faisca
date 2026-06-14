@@ -248,6 +248,7 @@ function boot(){
     grid:{spacing:26,length:2,colour:'#e8ddcb',snap:true},zoom:{controls:true,wheel:true,startScale:0.95},trashcan:true,scrollbars:true});
   window.addEventListener('resize',()=>Blockly.svgResize(ws));
   abrirLicao(1);
+  document.getElementById('connectBtn').style.display = adapter.needsConnect?'':'none';
 }
 
 /* ===================================================================
@@ -368,6 +369,7 @@ function trocarPlaca(){
   if(adapter&&adapter.needsConnect&&(adapter.port||adapter.dev)) adapter.disconnect();
   const k=document.getElementById('placa').value; adapter=ADAPTERS[k];
   const b=document.getElementById('connectBtn'); b.classList.remove('on','err');
+  b.style.display=adapter.needsConnect?'':'none'; // simulador não precisa de ligação
   document.getElementById('connTxt').textContent=adapter.needsConnect?('Ligar '+adapter.name):'Pronto';
   document.getElementById('boardState').textContent=adapter.name.toLowerCase();
   document.getElementById('chip').textContent=({sim:'SIMULADOR',arduino:'ARDUINO UNO',microbit:'BBC micro:bit'})[k];
