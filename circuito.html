@@ -92,7 +92,7 @@
 
 <header>
   <div class="mark" aria-hidden="true"><span class="a"></span><span class="b"></span><span class="c"></span></div>
-  <div class="brand"><b>Faísca</b><small>blocks.buinho.education · build B3</small></div>
+  <div class="brand"><b>Faísca</b><small>blocks.buinho.education · build B4</small></div>
   <button class="btn lic" onclick="abrirDrawer()">☰ Lições</button>
   <div class="grow"></div>
   <select class="sel" id="placa" onchange="trocarPlaca()" aria-label="Placa">
@@ -488,7 +488,7 @@ function concluir(){
    INTERPRETADOR
    =================================================================== */
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-function hi(b){ ws.highlightBlock(b?b.id:null); }
+function hi(b){ try{ if(ws&&typeof ws.highlightBlock==='function') ws.highlightBlock(b?b.id:null); }catch(e){} }
 async function execChain(b){ for(;b&&S.running;b=b.getNextBlock()) await execBlock(b); }
 async function execBlock(b){ hi(b);
   switch(b.type){
@@ -517,7 +517,7 @@ async function run(){
   if(!top){ toast('Começa com o bloco “ao iniciar”.'); return; }
   S.running=true; resetVerif(); verif.ativa = !!LICOES[estado.atual].criterio;
   log('▶ a correr no '+adapter.name);
-  try{ await execChain(top.getNextBlock()); }catch(e){ log('⚠ '+e.message); }
+  try{ await execChain(top.getNextBlock()); }catch(e){ log('⚠ '+e.message); toast('Erro: '+e.message); }
   hi(null); S.running=false;
 }
 function stopRun(){ S.running=false; hi(null); if(typeof pinState!=='undefined'){ pinState['13']=0; if(typeof refreshLED==='function') refreshLED(); } }
