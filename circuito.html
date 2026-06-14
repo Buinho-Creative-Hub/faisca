@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faísca · Bancada (protótipo)</title>
+<style>
+  :root{--creme:#FAF0E1;--painel:#FFF9F0;--azul:#2038A6;--laranja:#FA6415;--verde:#00B88A;
+    --amarelo:#F0A500;--tinta:#191d33;--suave:#5b6079;--linha:#e8ddcb;}
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{background:var(--creme);color:var(--tinta);font-family:'Asap',system-ui,sans-serif;height:100vh;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--painel);border-bottom:2px solid var(--linha)}
+  header b{font-size:20px} header small{color:var(--suave)}
+  .grow{flex:1}
+  .btn{border:0;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;font-size:14px}
+  .run{background:var(--verde);color:#fff} .stop{background:#e9e1d2} .wire{background:var(--azul);color:#fff} .clr{background:#e9e1d2}
+  .btn.active{outline:3px solid var(--laranja);outline-offset:1px}
+  main{flex:1;display:flex;min-height:0}
+  .stage{flex:1;display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto}
+  aside{width:300px;background:var(--painel);border-left:2px solid var(--linha);padding:14px;overflow:auto}
+  aside h3{margin:.2em 0 .4em;font-size:15px}
+  .hint{background:#fff;border:1px solid var(--linha);border-radius:10px;padding:10px;font-size:13px;color:var(--suave);line-height:1.45}
+  .ok{color:var(--verde);font-weight:700} .bad{color:var(--laranja);font-weight:700}
+  svg{background:#fff;border:1px solid var(--linha);border-radius:14px;max-width:100%;height:auto}
+  .hole{fill:#cdd7df;stroke:#9fb0bb;stroke-width:1;cursor:pointer}
+  .hole:hover{fill:var(--amarelo)}
+  .hole.sel{fill:var(--laranja)}
+  .pin{fill:#1d6b4f;stroke:#0c3a2a;stroke-width:1;cursor:pointer}
+  .pin:hover{fill:var(--amarelo)}
+  .pinlbl{font:bold 11px sans-serif;fill:#0c3a2a;text-anchor:middle}
+  .lbl{font:11px sans-serif;fill:#7a8893;text-anchor:middle}
+  .wireln{stroke:#d23c3c;stroke-width:4;stroke-linecap:round;cursor:pointer}
+  .ledbody{stroke:#7a5b00;stroke-width:1.5}
+  .leg{stroke:#888;stroke-width:2}
+</style>
+</head>
+<body>
+<header>
+  <b>Faísca · Bancada</b><small>protótipo de circuito · LIÇÃO: acende o LED no pino 13</small>
+  <span class="grow"></span>
+  <button class="btn wire" id="wireBtn" onclick="toggleWire()">✏️ Ligar fios</button>
+  <button class="btn clr" onclick="limparFios()">limpar fios</button>
+  <button class="btn run" onclick="correr()">▶ Correr</button>
+  <button class="btn stop" onclick="parar()">■ Parar</button>
+</header>
+<main>
+  <div class="stage">
+    <svg id="cv" viewBox="0 0 560 520" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <aside>
+    <h3>Objetivo</h3>
+    <div class="hint">Faz o LED acender. Liga, com fios, o <b>pino 13</b> ao circuito da resistência+LED, e o <b>GND</b> ao outro lado do LED. Carrega em <b>✏️ Ligar fios</b>, clica num furo/pino e depois noutro para criar o fio.</div>
+    <h3 style="margin-top:14px">Estado</h3>
+    <div class="hint" id="estado">—</div>
+    <h3 style="margin-top:14px">Programa (blocos)</h3>
+    <div class="hint">para sempre:<br>&nbsp;&nbsp;ligar LED no pino 13<br>&nbsp;&nbsp;esperar 0.5 s<br>&nbsp;&nbsp;desligar LED no pino 13<br>&nbsp;&nbsp;esperar 0.5 s<br><i>(nesta fatia o programa é fixo; a seguir liga-se aos blocos a sério.)</i></div>
+  </aside>
+</main>
+<script>
+/* =====================================================================
+   MOTOR DE NETLIST (puro, testável)  — exportado em window.NET
+   Nós: furos de breadboard, rails, pinos do Arduino, e pernas de componentes.
+   Ligações elétricas: (1) interno da breadboard (coluna partilha rede),
+   (2) rails contínuos, (3) fios do utilizador, (4) pernas pousadas num furo.
+   Componentes como ARESTAS entre redes: resistência (R, não-direcional),
+   LED (D, ânodo->cátodo).
+   ===================================================================== */
+function makeCircuit(){
+  const uf={};                       // union-find
+  function find(x){ uf[x]=uf[x]??x; while(uf[x]!==x){ uf[x]=uf[uf[x]]; x=uf[x]; } return x; }
+  function union(a,b){ uf[find(a)]=find(b); }
+  const wires=[];                    // {a,b}
+  const comps=[];                    // {kind:'R'|'D', a,b}  (D: a=ânodo, b=cátodo)
+  return {
+    node(id){ find(id); return id; },
+    // breadboard: meia-placa 'T'(a-e)/'B'(f-j), colunas 1..cols, ligações por coluna
+    breadboard(cols){
+      const ROWS={T:['a','b','c','d','e'],B:['f','g','h','i','j']};
+      for(const half of ['T','B']) for(let c=1;c<=cols;c++){
+        const base=`bb:${half}:${c}:${ROWS[half][0]}`;
+        for(const r of ROWS[half]) union(`bb:${half}:${c}:${r}`, base);
+      }
+    },
+    rail(name){ find('rail:'+name); },          // rail = um só nó (contínuo)
+    pin(name){ find('ard:'+name); },
+    addWire(a,b){ wires.push({a,b}); union(a,b); },
+    clearWires(){ wires.length=0; for(const k in uf) delete uf[k]; }, // reset total; chamador re-arma
+    leadInHole(lead,hole){ union(lead,hole); },
+    resistor(a,b){ comps.push({kind:'R',a,b}); },
+    led(anode,cathode){ comps.push({kind:'D',a:anode,b:cathode}); },
+    wires, comps, find,
+    /* Avalia se um LED conduz. hot=conjunto de pinos a 5V (ex: ['ard:13'] se HIGH). */
+    ledOn(anode,cathode,hot){
+      const root=find, R=r=>root(r);
+      const hotRoots=new Set(hot.map(R));
+      const gnd=R('ard:GND');
+      // grafo de redes ligadas por arestas de componentes
+      const adj={};                  // dir: lista de {to, isR}
+      const add=(u,v,isR,dir)=>{ (adj[u]=adj[u]||[]).push({to:v,isR}); if(!dir)(adj[v]=adj[v]||[]).push({to:u,isR}); };
+      for(const c of comps){ const a=R(c.a),b=R(c.b);
+        if(c.kind==='R') add(a,b,true,false);
+        else add(a,b,false,true);    // díodo só ânodo->cátodo
+      }
+      const aR=R(anode), kR=R(cathode);
+      // 1) ânodo alcançável a partir de um pino quente, via resistências/fios?
+      const reach=new Set(hotRoots); const stack=[...hotRoots];
+      while(stack.length){ const n=stack.pop();
+        for(const e of (adj[n]||[])){ if(!e.isR)continue; if(!reach.has(e.to)){ reach.add(e.to); stack.push(e.to); } } }
+      if(!reach.has(aR)) return {on:false,reason:'O pino 13 não chega ao LED.'};
+      const semR = hotRoots.has(aR);   // mesma rede do pino = sem resistência em série
+      // 2) do cátodo até GND (por resistências/fios)
+      const seen2=new Set([kR]); const st2=[kR]; let gndReach=(kR===gnd);
+      while(st2.length){ const n=st2.pop(); if(n===gnd){gndReach=true;break;}
+        for(const e of (adj[n]||[])){ if(!e.isR)continue; if(!seen2.has(e.to)){seen2.add(e.to);st2.push(e.to);} } }
+      if(!gndReach) return {on:false,reason:'Falta ligar o GND ao outro lado do LED.'};
+      if(semR) return {on:true,warn:true,reason:'Acende, mas sem resistência o LED queimava num circuito real.'};
+      return {on:true,reason:'Circuito correcto!'};
+    }
+  };
+}
+if(typeof module!=='undefined'){ module.exports={makeCircuit}; }
+if(typeof window!=='undefined'){ window.NET={makeCircuit}; }
+</script>
+<script>
+/* =====================================================================
+   GEOMETRIA + RENDER + INTERAÇÃO (browser)
+   ===================================================================== */
+if(typeof document!=='undefined'){
+const PITCH=26, X0=70, COLS=8;
+const ROWY={ 'railT+':40,'railT-':62, a:120,b:146,c:172,d:198,e:224, f:300,g:326,h:352,i:378,j:404, 'railB+':462,'railB-':484 };
+const colX=c=>X0+(c-1)*PITCH;
+const coord={};                    // nodeId -> {x,y}
+let circ, pinState={'13':0}, running=null, wiring=false, pending=null;
+
+function rebuild(){
+  circ=makeCircuit();
+  circ.breadboard(COLS);
+  circ.rail('T+'); circ.rail('T-'); circ.rail('B+'); circ.rail('B-');
+  ['13','GND','5V','A0','12','2'].forEach(p=>circ.pin(p));
+  // componentes pré-pousados: resistência col3->col5 (topo); LED ânodo col5, cátodo col7 (topo)
+  circ.leadInHole('res:1','bb:T:3:a'); circ.leadInHole('res:2','bb:T:5:a'); circ.resistor('res:1','res:2');
+  circ.leadInHole('led:A','bb:T:5:c'); circ.leadInHole('led:K','bb:T:7:c'); circ.led('led:A','led:K');
+}
+
+function svgEl(t,a){ const e=document.createElementNS('http://www.w3.org/2000/svg',t); for(const k in a)e.setAttribute(k,a[k]); return e; }
+function render(){
+  const cv=document.getElementById('cv'); cv.innerHTML='';
+  // breadboard corpo
+  cv.appendChild(svgEl('rect',{x:40,y:96,width:COLS*PITCH+40,height:152,rx:10,fill:'#f3f0e6',stroke:'#d9cfb6'}));
+  cv.appendChild(svgEl('rect',{x:40,y:282,width:COLS*PITCH+40,height:152,rx:10,fill:'#f3f0e6',stroke:'#d9cfb6'}));
+  // canal central
+  cv.appendChild(svgEl('rect',{x:40,y:250,width:COLS*PITCH+40,height:28,fill:'#e7e0cf'}));
+  // furos da breadboard
+  const ROWS={T:['a','b','c','d','e'],B:['f','g','h','i','j']};
+  for(const half of ['T','B']) for(let c=1;c<=COLS;c++) for(const r of ROWS[half]){
+    const id=`bb:${half}:${c}:${r}`, x=colX(c), y=ROWY[r]; coord[id]={x,y};
+    const h=svgEl('circle',{cx:x,cy:y,r:5,class:'hole','data-id':id}); h.onclick=()=>clickNode(id); cv.appendChild(h);
+  }
+  // rails (linha contínua + alguns furos representativos)
+  [['T+','#d23c3c'],['T-','#2b6fd2'],['B+','#d23c3c'],['B-','#2b6fd2']].forEach(([nm,col])=>{
+    const y=ROWY['rail'+nm]; const id='rail:'+nm; coord[id]={x:colX(1),y};
+    cv.appendChild(svgEl('line',{x1:colX(1)-6,y1:y,x2:colX(COLS)+6,y2:y,stroke:col,'stroke-width':2,opacity:.5}));
+    for(let c=1;c<=COLS;c++){ const x=colX(c); const h=svgEl('circle',{cx:x,cy:y,r:5,class:'hole','data-id':id}); h.onclick=()=>clickNode(id); cv.appendChild(h); }
+  });
+  // Arduino (faixa de pinos em baixo)
+  const ax=40, ay=498, pins=['13','12','GND','5V','A0','2'];
+  cv.appendChild(svgEl('rect',{x:ax,y:ay-6,width:COLS*PITCH+40,height:20,rx:6,fill:'#0a7f5b',opacity:.12}));
+  pins.forEach((p,i)=>{ const x=colX(1)+i*((COLS-1)*PITCH/(pins.length-1)); const id='ard:'+p; coord[id]={x,y:ay};
+    const pin=svgEl('circle',{cx:x,cy:ay,r:7,class:'pin','data-id':id}); pin.onclick=()=>clickNode(id); cv.appendChild(pin);
+    cv.appendChild(svgEl('text',{x,y:ay+22,class:'pinlbl'})).textContent=p; });
+  cv.appendChild(svgEl('text',{x:ax+8,y:ay-14,class:'lbl','text-anchor':'start'})).textContent='ARDUINO';
+  // componentes
+  drawResistor('bb:T:3:a','bb:T:5:a');
+  drawLED('bb:T:5:c','bb:T:7:c');
+  // fios
+  for(const w of circ.wires) drawWire(w);
+  refreshLED();
+}
+function drawResistor(h1,h2){ const cv=document.getElementById('cv'),a=coord[h1],b=coord[h2];
+  cv.appendChild(svgEl('line',{x1:a.x,y1:a.y,x2:a.x,y2:a.y-26,class:'leg'}));
+  cv.appendChild(svgEl('line',{x1:b.x,y1:b.y,x2:b.x,y2:b.y-26,class:'leg'}));
+  cv.appendChild(svgEl('rect',{x:Math.min(a.x,b.x)+4,y:a.y-36,width:Math.abs(b.x-a.x)-8,height:16,rx:5,fill:'#caa46a',stroke:'#7a5b00'}));
+  cv.appendChild(svgEl('text',{x:(a.x+b.x)/2,y:a.y-42,class:'lbl'})).textContent='220Ω'; }
+function drawLED(hA,hK){ const cv=document.getElementById('cv'),a=coord[hA],k=coord[hK];
+  cv.appendChild(svgEl('line',{x1:a.x,y1:a.y,x2:a.x,y2:a.y-30,class:'leg'}));
+  cv.appendChild(svgEl('line',{x1:k.x,y1:k.y,x2:k.x,y2:k.y-30,class:'leg'}));
+  const cx=(a.x+k.x)/2, cy=a.y-40;
+  const body=svgEl('circle',{cx,cy,r:11,class:'ledbody',id:'ledDot',fill:'#7a2f2f'});
+  cv.appendChild(body);
+  cv.appendChild(svgEl('text',{x:cx,y:cy-16,class:'lbl'})).textContent='LED'; }
+function drawWire(w){ const cv=document.getElementById('cv'),a=coord[w.a],b=coord[w.b]; if(!a||!b)return;
+  const ln=svgEl('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:'wireln'});
+  ln.onclick=(e)=>{ e.stopPropagation(); circ.wires.splice(circ.wires.indexOf(w),1); rearm(); render(); };
+  cv.appendChild(ln); }
+
+function clickNode(id){
+  if(!wiring) return;
+  if(!pending){ pending=id; markSel(id,true); return; }
+  if(pending!==id){ circ.addWire(pending,id); }
+  markSel(pending,false); pending=null; render();
+}
+function markSel(id,on){ document.querySelectorAll(`[data-id="${id}"]`).forEach(e=>e.classList.toggle('sel',on)); }
+function toggleWire(){ wiring=!wiring; pending=null; document.getElementById('wireBtn').classList.toggle('active',wiring); render(); }
+function limparFios(){ const saved=[]; circ.wires.length=0; rearm(); render(); }
+function rearm(){ // reconstrói o uf mantendo os fios actuais
+  const keep=circ.wires.slice(); rebuild(); for(const w of keep) circ.addWire(w.a,w.b); circ.wires.length=0; circ.wires.push(...keep);
+}
+
+function refreshLED(){
+  const hot = pinState['13'] ? ['ard:13'] : [];
+  const res = circ.ledOn('led:A','led:K',hot.concat(['ard:5V'].filter(()=>false)));
+  const dot=document.getElementById('ledDot');
+  const lit = res.on && pinState['13'];
+  if(dot){ dot.setAttribute('fill', lit?'#ff5a2a':'#7a2f2f');
+    dot.setAttribute('filter', lit?'drop-shadow(0 0 10px #ff7a3a)':''); }
+  const est=document.getElementById('estado');
+  if(!circ.wires.length){ est.innerHTML='Sem fios. Liga o pino 13 e o GND ao circuito.'; return; }
+  const stat = circ.ledOn('led:A','led:K',['ard:13']);
+  est.innerHTML = stat.on ? (stat.warn?`<span class="bad">⚠ ${stat.reason}</span>`:`<span class="ok">✓ ${stat.reason}</span>`)
+                          : `<span class="bad">${stat.reason}</span>`;
+}
+
+function correr(){ if(running) return; let on=false;
+  running=setInterval(()=>{ on=!on; pinState['13']=on?1:0; refreshLED(); }, 500); }
+function parar(){ clearInterval(running); running=null; pinState['13']=0; refreshLED(); }
+
+rebuild(); render();
+}
+</script>
+</body>
+</html>
