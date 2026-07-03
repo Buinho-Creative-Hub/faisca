@@ -24,9 +24,10 @@ para o caminho local. A biblioteca é Apache-2.0.
 
 ## 3. micro:bit (Web Bluetooth)
 A micro:bit precisa de um pequeno programa companheiro que fale o mini-protocolo
-de texto da Faísca pela UART. O programa completo (LED em P0, **servo em P1**,
-**DHT11 em P2**) e as instruções de instalação — incluindo as extensões MakeCode
-necessárias (Bluetooth + DHT11_DHT22 do alankrantas) — estão em
+de texto da Faísca pela UART. O programa completo (LED, **servo**, **DHT11**,
+**buzzer**, **ultrassons**, **PIR**, **LCD 16×2** e manípulo opcional) e as
+instruções de instalação — incluindo as extensões MakeCode necessárias
+(Bluetooth, DHT11_DHT22, sonar, MakerBit LCD1602) — estão em
 [`microbit/`](microbit/README.md).
 
 Na Faísca: **micro:bit (Bluetooth)** → **Ligar** → emparelhar “BBC micro:bit”.

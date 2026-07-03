@@ -109,10 +109,19 @@
         <div class="unit"><div class="led" id="led"></div>LED<br>pino 13</div>
         <div class="unit"><button class="pbtn" id="pbtn" onmousedown="btn(1)" onmouseup="btn(0)" ontouchstart="btn(1)" ontouchend="btn(0)">PUSH</button>botão<br>pino 2</div>
         <div class="unit"><div class="servo"><i id="servoArm"></i></div>servo<br>pino 9</div>
+        <div class="unit"><div id="buzz" style="font-size:22px;opacity:.25;line-height:34px">🔊</div>buzzer<br>pino 8</div>
       </div>
       <div class="light">luz (A0) <input type="range" id="luz" min="0" max="1023" value="700"></div>
       <div class="light">temp °C <input type="range" id="temp" min="-10" max="50" value="21"></div>
       <div class="light">hum % <input type="range" id="hum" min="0" max="100" value="50"></div>
+      <div class="light">distância cm <input type="range" id="dist" min="0" max="200" value="50"></div>
+      <div class="light">manípulo % <input type="range" id="pot" min="0" max="100" value="50"></div>
+      <div class="light">movimento (PIR) <input type="checkbox" id="pir" style="width:auto"></div>
+      <div id="lcdbox" style="margin-top:8px;background:#1a4d2e;border-radius:6px;padding:7px 10px;border:3px solid #333">
+        <div style="font-size:10px;color:#7fc98f;margin-bottom:3px">LCD 16×2 (I2C)</div>
+        <pre id="lcd1" style="margin:0;font-family:monospace;font-size:13px;letter-spacing:2px;color:#c6f6d5;background:#9ad26e22;min-height:17px"> </pre>
+        <pre id="lcd2" style="margin:2px 0 0;font-family:monospace;font-size:13px;letter-spacing:2px;color:#c6f6d5;background:#9ad26e22;min-height:17px"> </pre>
+      </div>
     </div>
     <div class="codepanel" id="codepanel"><pre id="code"></pre></div>
     <div class="console"><div class="ch"><span>Monitor série</span><button class="clr" onclick="clearLog()">limpar</button></div><pre id="log">&gt; à espera de correr…</pre></div>
@@ -161,8 +170,8 @@ function guardarProgresso(){ try{ localStorage.setItem('faisca.progresso', JSON.
 /* ---- mapa bloco -> categoria (para reconstruir a caixa por lição) ---- */
 const CAT = { ao_iniciar:'Eventos',
   para_sempre:'Controlo', repetir:'Controlo', esperar:'Controlo', se_entao:'Controlo', se_senao:'Controlo',
-  ligar_led:'Saídas', desligar_led:'Saídas', mover_servo:'Saídas', mostrar_monitor:'Saídas',
-  botao_premido:'Sensores', ler_luz:'Sensores', ler_temperatura:'Sensores', ler_humidade:'Sensores', maior_que:'Sensores', numero:'Sensores' };
+  ligar_led:'Saídas', desligar_led:'Saídas', mover_servo:'Saídas', tocar_nota:'Saídas', lcd_escrever:'Saídas', lcd_valor:'Saídas', lcd_limpar:'Saídas', mostrar_monitor:'Saídas',
+  botao_premido:'Sensores', ler_luz:'Sensores', ler_temperatura:'Sensores', ler_humidade:'Sensores', ler_distancia:'Sensores', ler_manipulo:'Sensores', movimento_detetado:'Sensores', maior_que:'Sensores', numero:'Sensores' };
 const CATCOR = {Eventos:'#FA6415',Controlo:'#2038A6','Saídas':'#F0A500',Sensores:'#00B88A'};
 const ORDEM = ['Eventos','Controlo','Saídas','Sensores'];
 function construirToolbox(disp){
@@ -184,7 +193,13 @@ const SimAdapter = { name:'Simulador', needsConnect:false,
   async digitalRead(p){ return (+p===2)?S.button:0; },
   async analogRead(p){ return +document.getElementById('luz').value; },
   async readTemp(){ return +document.getElementById('temp').value; },
-  async readHum(){ return +document.getElementById('hum').value; }, async say(t){} };
+  async readHum(){ return +document.getElementById('hum').value; },
+  async readDist(){ return +document.getElementById('dist').value; },
+  async readPot(){ return +document.getElementById('pot').value; },
+  async readPir(){ return document.getElementById('pir').checked?1:0; },
+  async tone(f,ms){ simTone(f,ms); },
+  async lcdWrite(l,t){ document.getElementById('lcd'+l).textContent=(t+' ').slice(0,16); },
+  async lcdClear(){ document.getElementById('lcd1').textContent=' '; document.getElementById('lcd2').textContent=' '; }, async say(t){} };
 
 const ArduinoAdapter = { name:'Arduino', needsConnect:true, port:null, writer:null,
   portState:[0,0], analog:Array(8).fill(0), digital:Array(16).fill(0),
@@ -200,9 +215,15 @@ const ArduinoAdapter = { name:'Arduino', needsConnect:true, port:null, writer:nu
   async servoWrite(p,a){ p=+p; await this._mode(p,4); await this._send([0xE0|(p&0x0F),a&0x7F,(a>>7)&0x7F]); if(p===9) servo(a); },
   async digitalRead(p){ p=+p; await this._send([0xD0|(p>>3),1]); return this.digital[p]||0; },
   async analogRead(p){ const ch=(''+p).replace('A','')|0; await this._send([0xC0|ch,1]); return this.analog[ch]||0; },
-  _dhtAviso(){ if(!this._dhtAvisado){ this._dhtAvisado=true; log('⚠ DHT11 no Arduino requer firmware dedicado (StandardFirmata não lê DHT) — usa micro:bit ou simulador'); } },
-  async readTemp(){ this._dhtAviso(); return 0; },
-  async readHum(){ this._dhtAviso(); return 0; },
+  _extAviso(o){ this._avisado=this._avisado||{}; if(!this._avisado[o]){ this._avisado[o]=1; log('⚠ '+o+' no Arduino requer firmware dedicado (StandardFirmata não suporta) — usa micro:bit ou simulador'); } },
+  async readTemp(){ this._extAviso('DHT11'); return 0; },
+  async readHum(){ this._extAviso('DHT11'); return 0; },
+  async readDist(){ this._extAviso('ultrassons'); return 0; },
+  async readPot(){ const v=await this.analogRead('A1'); return Math.round(v/10.23); },
+  async readPir(){ return await this.digitalRead(4); },
+  async tone(f,ms){ this._extAviso('buzzer'); },
+  async lcdWrite(l,t){ this._extAviso('LCD'); },
+  async lcdClear(){ this._extAviso('LCD'); },
   async say(t){},
   async _read(){ const r=this.port.readable.getReader(); let buf=[];
     try{ while(true){ const {value,done}=await r.read(); if(done)break;
@@ -212,20 +233,26 @@ const ArduinoAdapter = { name:'Arduino', needsConnect:true, port:null, writer:nu
         else if(buf.length>3) buf.shift(); } } }catch(e){} } };
 
 const UART='6e400001-b5a3-f393-e0a9-e50e24dcca9e',RX='6e400002-b5a3-f393-e0a9-e50e24dcca9e',TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e';
-const MicrobitAdapter = { name:'micro:bit', needsConnect:true, dev:null, rx:null, button:0, light:700, temp:21, hum:50,
+const MicrobitAdapter = { name:'micro:bit', needsConnect:true, dev:null, rx:null, button:0, light:700, temp:21, hum:50, dist:0, pot:50, pir:0,
   async connect(){ if(!('bluetooth' in navigator)) throw new Error('Sem Web Bluetooth (usa Chrome/Edge, PC ou Android).');
     this.dev=await navigator.bluetooth.requestDevice({filters:[{namePrefix:'BBC micro:bit'}],optionalServices:[UART]});
     const g=await this.dev.gatt.connect(), s=await g.getPrimaryService(UART);
     this.rx=await s.getCharacteristic(RX); const tx=await s.getCharacteristic(TX); await tx.startNotifications();
     tx.addEventListener('characteristicvaluechanged',e=>{ const t=new TextDecoder().decode(e.target.value).trim();
       if(t[0]==='B') this.button=+t.slice(1)||0; if(t[0]==='L') this.light=+t.slice(1)||0;
-      if(t[0]==='T') this.temp=+t.slice(1)||0; if(t[0]==='H') this.hum=+t.slice(1)||0; }); return true; },
+      if(t[0]==='T') this.temp=+t.slice(1)||0; if(t[0]==='H') this.hum=+t.slice(1)||0;
+      if(t[0]==='D') this.dist=+t.slice(1)||0; if(t[0]==='P') this.pot=+t.slice(1)||0;
+      if(t[0]==='M') this.pir=+t.slice(1)||0; }); return true; },
   async disconnect(){ try{this.dev&&this.dev.gatt.disconnect();}catch(e){} this.dev=null; },
   async _send(s){ if(this.rx) await this.rx.writeValue(new TextEncoder().encode(s+'\n')); },
   async digitalWrite(p,v){ await this._send('L'+(v?1:0)); setLed(v); },
   async servoWrite(p,a){ await this._send('S'+a); servo(a); },
   async digitalRead(p){ return this.button; }, async analogRead(p){ return this.light; },
   async readTemp(){ return this.temp; }, async readHum(){ return this.hum; },
+  async readDist(){ return this.dist; }, async readPot(){ return this.pot; }, async readPir(){ return this.pir; },
+  async tone(f,ms){ await this._send('Z'+f+':'+ms); },
+  async lcdWrite(l,t){ await this._send('C'+l+t); },
+  async lcdClear(){ await this._send('C0'); },
   async say(t){ await this._send('T'+t); } };
 
 const ADAPTERS={sim:SimAdapter,arduino:ArduinoAdapter,microbit:MicrobitAdapter};
@@ -250,10 +277,17 @@ function boot(){
     {type:"desligar_led",message0:"desligar LED no pino %1",args0:[{type:"field_dropdown",name:"PIN",options:[["13","13"],["12","12"],["11","11"]]}],previousStatement:null,nextStatement:null,colour:"#F0A500",inputsInline:true},
     {type:"mover_servo",message0:"mover servo no pino %1 para %2 °",args0:[{type:"field_dropdown",name:"PIN",options:[["9","9"],["10","10"]]},{type:"field_number",name:"ANG",value:90,min:0,max:180}],previousStatement:null,nextStatement:null,colour:"#F0A500",inputsInline:true},
     {type:"mostrar_monitor",message0:"mostrar no monitor %1",args0:[{type:"field_input",name:"TXT",text:"olá"}],previousStatement:null,nextStatement:null,colour:"#F0A500",inputsInline:true},
+    {type:"tocar_nota",message0:"tocar nota %1 durante %2 s",args0:[{type:"field_dropdown",name:"NOTA",options:[["dó","262"],["ré","294"],["mi","330"],["fá","349"],["sol","392"],["lá","440"],["si","494"],["dó agudo","523"]]},{type:"field_number",name:"DUR",value:0.5,min:0.1,precision:0.1}],previousStatement:null,nextStatement:null,colour:"#F0A500",inputsInline:true},
+    {type:"lcd_escrever",message0:"LCD linha %1 : %2",args0:[{type:"field_dropdown",name:"LINHA",options:[["1","1"],["2","2"]]},{type:"field_input",name:"TXT",text:"olá"}],previousStatement:null,nextStatement:null,colour:"#F0A500",inputsInline:true},
+    {type:"lcd_valor",message0:"LCD linha %1 mostrar %2",args0:[{type:"field_dropdown",name:"LINHA",options:[["1","1"],["2","2"]]},{type:"input_value",name:"VAL",check:"Number"}],previousStatement:null,nextStatement:null,colour:"#F0A500",inputsInline:true},
+    {type:"lcd_limpar",message0:"limpar LCD",previousStatement:null,nextStatement:null,colour:"#F0A500"},
     {type:"botao_premido",message0:"botão no pino %1 premido?",args0:[{type:"field_dropdown",name:"PIN",options:[["2","2"],["3","3"]]}],output:"Boolean",colour:"#00B88A",inputsInline:true},
     {type:"ler_luz",message0:"nível de luz (%1)",args0:[{type:"field_dropdown",name:"PIN",options:[["A0","A0"],["A1","A1"]]}],output:"Number",colour:"#00B88A",inputsInline:true},
     {type:"ler_temperatura",message0:"temperatura °C (DHT11)",output:"Number",colour:"#00B88A"},
     {type:"ler_humidade",message0:"humidade %% (DHT11)",output:"Number",colour:"#00B88A"},
+    {type:"ler_distancia",message0:"distância cm (ultrassons)",output:"Number",colour:"#00B88A"},
+    {type:"ler_manipulo",message0:"manípulo 0-100",output:"Number",colour:"#00B88A"},
+    {type:"movimento_detetado",message0:"movimento? (PIR)",output:"Boolean",colour:"#00B88A"},
     {type:"maior_que",message0:"%1 > %2",args0:[{type:"input_value",name:"A",check:"Number"},{type:"input_value",name:"B",check:"Number"}],output:"Boolean",colour:"#00B88A",inputsInline:true},
     {type:"numero",message0:"%1",args0:[{type:"field_number",name:"NUM",value:50}],output:"Number",colour:"#00B88A"},
   ]);
@@ -345,18 +379,25 @@ async function execBlock(b,gen){ hi(b);
     case 'desligar_led':{ const p=+b.getFieldValue('PIN'); await adapter.digitalWrite(p,0); log('digitalWrite('+p+', LOW)'); emitHW({t:'led',pin:p,v:0,btn:S.button,luz:lerLuz()}); break; }
     case 'mover_servo':{ const a=+b.getFieldValue('ANG'); await adapter.servoWrite(b.getFieldValue('PIN'),a); log('servo → '+a+'°'); emitHW({t:'servo',ang:a}); break; }
     case 'mostrar_monitor':{ const t=b.getFieldValue('TXT'); await adapter.say(t); log('> '+t); break; }
+    case 'tocar_nota':{ const f=+b.getFieldValue('NOTA'), ms=Math.round((+b.getFieldValue('DUR')||0)*1000); await adapter.tone(f,ms); log('tone('+f+' Hz, '+ms+' ms)'); emitHW({t:'som',freq:f,ms:ms}); await sleep(ms); break; }
+    case 'lcd_escrever':{ const ln=+b.getFieldValue('LINHA'), tx=b.getFieldValue('TXT'); await adapter.lcdWrite(ln,tx); log('lcd'+ln+': '+tx); emitHW({t:'lcd',linha:ln,txt:tx}); break; }
+    case 'lcd_valor':{ const ln=+b.getFieldValue('LINHA'), v=await evalNum(b.getInputTargetBlock('VAL')); await adapter.lcdWrite(ln,''+v); emitHW({t:'lcd',linha:ln,txt:''+v}); break; }
+    case 'lcd_limpar': await adapter.lcdClear(); break;
     case 'se_entao': if(await evalBool(b.getInputTargetBlock('COND'))) await execChain(b.getInputTargetBlock('FAZER'),gen); break;
     case 'se_senao': if(await evalBool(b.getInputTargetBlock('COND'))) await execChain(b.getInputTargetBlock('ENTAO'),gen); else await execChain(b.getInputTargetBlock('SENAO'),gen); break;
   }
 }
 async function evalBool(b){ if(!b) return false;
   if(b.type==='botao_premido') return (await adapter.digitalRead(b.getFieldValue('PIN')))===1;
+  if(b.type==='movimento_detetado') return (await adapter.readPir())===1;
   if(b.type==='maior_que') return (await evalNum(b.getInputTargetBlock('A')))>(await evalNum(b.getInputTargetBlock('B'))); return false; }
 async function evalNum(b){ if(!b) return 0;
   if(b.type==='numero') return +b.getFieldValue('NUM');
   if(b.type==='ler_luz') return await adapter.analogRead(b.getFieldValue('PIN'));
   if(b.type==='ler_temperatura') return await adapter.readTemp();
-  if(b.type==='ler_humidade') return await adapter.readHum(); return 0; }
+  if(b.type==='ler_humidade') return await adapter.readHum();
+  if(b.type==='ler_distancia') return await adapter.readDist();
+  if(b.type==='ler_manipulo') return await adapter.readPot(); return 0; }
 
 async function run(){
   if(S.running) return;
@@ -373,6 +414,13 @@ function stopRun(){ S.running=false; hi(null); if(_ledTimer){clearTimeout(_ledTi
 /* ===================================================================
    PLACA / LIGAÇÃO / UI
    =================================================================== */
+let _ac=null;
+function simTone(f,ms){ try{
+  _ac=_ac||new (window.AudioContext||window.webkitAudioContext)(); if(_ac.state==='suspended')_ac.resume();
+  const o=_ac.createOscillator(), g=_ac.createGain(); o.type='square'; o.frequency.value=f; g.gain.value=0.08;
+  o.connect(g); g.connect(_ac.destination); o.start(); o.stop(_ac.currentTime+ms/1000);
+  const z=document.getElementById('buzz'); if(z){ z.style.opacity='1'; setTimeout(()=>{z.style.opacity='.25';},ms); }
+}catch(e){} }
 let _ledTimer=null;
 function setLed(v){
   const el=document.getElementById('led');
@@ -407,6 +455,10 @@ function gerarCodigo(){ const top=window.ws&&ws.getTopBlocks(true).find(x=>x.typ
     else if(b.type==='desligar_led') L.push(t+'digitalWrite('+b.getFieldValue('PIN')+', LOW);');
     else if(b.type==='esperar') L.push(t+'delay('+Math.round((+b.getFieldValue('SEG'))*1000)+');');
     else if(b.type==='mover_servo') L.push(t+'servo.write('+b.getFieldValue('ANG')+');');
+    else if(b.type==='tocar_nota'){ const ms=Math.round((+b.getFieldValue('DUR'))*1000); L.push(t+'tone(8, '+b.getFieldValue('NOTA')+', '+ms+'); delay('+ms+');'); }
+    else if(b.type==='lcd_escrever') L.push(t+'lcd.setCursor(0, '+(b.getFieldValue('LINHA')-1)+'); lcd.print("'+b.getFieldValue('TXT')+'");');
+    else if(b.type==='lcd_valor') L.push(t+'lcd.setCursor(0, '+(b.getFieldValue('LINHA')-1)+'); lcd.print('+exprNum(b.getInputTargetBlock('VAL'))+');');
+    else if(b.type==='lcd_limpar') L.push(t+'lcd.clear();');
     else if(b.type==='mostrar_monitor') L.push(t+'Serial.println("'+b.getFieldValue('TXT')+'");');
     else if(b.type==='para_sempre'){ L.push(t+'while (true) {'); walk(b.getInputTargetBlock('FAZER'),ind+1); L.push(t+'}'); }
     else if(b.type==='repetir'){ L.push(t+'for (int i=0;i<'+b.getFieldValue('VEZES')+';i++) {'); walk(b.getInputTargetBlock('FAZER'),ind+1); L.push(t+'}'); }
@@ -414,21 +466,32 @@ function gerarCodigo(){ const top=window.ws&&ws.getTopBlocks(true).find(x=>x.typ
     else if(b.type==='se_senao'){ L.push(t+'if ('+cond(b)+') {'); walk(b.getInputTargetBlock('ENTAO'),ind+1); L.push(t+'} else {'); walk(b.getInputTargetBlock('SENAO'),ind+1); L.push(t+'}'); }
   }})(top.getNextBlock(),1);
   const tipos=ws.getAllBlocks(false).map(x=>x.type);
-  const usaServo=tipos.includes('mover_servo'), usaDHT=tipos.includes('ler_temperatura')||tipos.includes('ler_humidade');
+  const usaServo=tipos.includes('mover_servo'), usaDHT=tipos.includes('ler_temperatura')||tipos.includes('ler_humidade'),
+        usaSonar=tipos.includes('ler_distancia'), usaLCD=tipos.includes('lcd_escrever')||tipos.includes('lcd_valor')||tipos.includes('lcd_limpar'),
+        usaPIR=tipos.includes('movimento_detetado');
   let hdr='';
   if(usaServo) hdr+='#include <Servo.h>   // biblioteca Servo (vem com o Arduino IDE)\nServo servo;\n';
   if(usaDHT) hdr+='#include <DHT.h>     // biblioteca "DHT sensor library" (Adafruit)\nDHT dht(7, DHT11);   // DHT11 no pino 7\n';
+  if(usaSonar) hdr+='#include <NewPing.h>  // biblioteca NewPing\nNewPing sonar(5, 6, 200);  // TRIG 5, ECHO 6\n';
+  if(usaLCD) hdr+='#include <LiquidCrystal_I2C.h>  // biblioteca "LiquidCrystal I2C"\nLiquidCrystal_I2C lcd(0x27, 16, 2);  // SDA A4, SCL A5\n';
   let setup='  pinMode(13, OUTPUT); pinMode(2, INPUT);';
+  if(usaPIR) setup+='\n  pinMode(4, INPUT);   // PIR no pino 4';
   if(usaServo) setup+='\n  servo.attach(9);';
   if(usaDHT) setup+='\n  dht.begin();';
+  if(usaLCD) setup+='\n  lcd.init(); lcd.backlight();';
   return (hdr?hdr+'\n':'')+'void setup() {\n'+setup+'\n}\n\nvoid loop() {\n'+(L.join('\n')||'  // vazio')+'\n}'; }
+function exprNum(t){ if(!t) return '0';
+  if(t.type==='numero') return t.getFieldValue('NUM');
+  if(t.type==='ler_temperatura') return 'dht.readTemperature()';
+  if(t.type==='ler_humidade') return 'dht.readHumidity()';
+  if(t.type==='ler_distancia') return 'sonar.ping_cm()';
+  if(t.type==='ler_manipulo') return 'map(analogRead(A1), 0, 1023, 0, 100)';
+  if(t.type==='ler_luz') return 'analogRead('+t.getFieldValue('PIN')+')';
+  return '0'; }
 function cond(b){ const c=b.getInputTargetBlock('COND'); if(!c) return 'false';
   if(c.type==='botao_premido') return 'digitalRead('+c.getFieldValue('PIN')+') == HIGH';
-  if(c.type==='maior_que'){ const n=x=>{const t=c.getInputTargetBlock(x); if(!t) return '0';
-    if(t.type==='numero') return t.getFieldValue('NUM');
-    if(t.type==='ler_temperatura') return 'dht.readTemperature()';
-    if(t.type==='ler_humidade') return 'dht.readHumidity()';
-    return 'analogRead('+t.getFieldValue('PIN')+')';}; return n('A')+' > '+n('B'); } return 'false'; }
+  if(c.type==='movimento_detetado') return 'digitalRead(4) == HIGH';
+  if(c.type==='maior_que') return exprNum(c.getInputTargetBlock('A'))+' > '+exprNum(c.getInputTargetBlock('B')); return 'false'; }
 function log(s){ const p=document.getElementById('log'); if(p.textContent.startsWith('>')) p.textContent=''; p.textContent+=(p.textContent?'\n':'')+s; p.scrollTop=p.scrollHeight; }
 function clearLog(){ document.getElementById('log').textContent='> à espera de correr…'; }
 let tT; function toast(m,win){ const t=document.getElementById('toast'); t.textContent=m; t.classList.toggle('win',!!win); t.classList.add('show'); clearTimeout(tT); tT=setTimeout(()=>t.classList.remove('show'),win?3200:2600); }
