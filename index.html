@@ -153,6 +153,8 @@ const LICOES = [
     disponiveis:null, inicio:HAT, criterio:null },
 ];
 const estado = { atual:1, feitas:new Set(), maxDesbloqueada:1 };
+try{ const p=JSON.parse(localStorage.getItem('faisca.progresso')||'null'); if(p){ (p.feitas||[]).forEach(n=>estado.feitas.add(n)); estado.maxDesbloqueada=Math.max(estado.maxDesbloqueada,p.max||1); } }catch(e){}
+function guardarProgresso(){ try{ localStorage.setItem('faisca.progresso', JSON.stringify({feitas:[...estado.feitas], max:estado.maxDesbloqueada})); }catch(e){} }
 
 /* ---- mapa bloco -> categoria (para reconstruir a caixa por lição) ---- */
 const CAT = { ao_iniciar:'Eventos',
@@ -256,6 +258,7 @@ function boot(){
    =================================================================== */
 function abrirLicao(i){
   const L=LICOES[i]; if(!L || !desbloqueada(i)) return;
+  if(S.running) stopRun(); // programa antigo não pode sobreviver à troca de lição
   estado.atual=i;
   ws.updateToolbox(construirToolbox(L.disponiveis));
   Blockly.serialization.workspaces.load(L.inicio||HAT, ws);
@@ -309,7 +312,7 @@ function emitHW(ev){
 }
 function concluir(){
   const i=estado.atual; if(estado.feitas.has(i)) return;
-  estado.feitas.add(i); estado.maxDesbloqueada=Math.max(estado.maxDesbloqueada,i+1);
+  estado.feitas.add(i); estado.maxDesbloqueada=Math.max(estado.maxDesbloqueada,i+1); guardarProgresso();
   document.getElementById('pill').classList.add('show');
   verif.ativa=false; toast('✓ Lição concluída! '+(LICOES[i+1]?'Desbloqueaste: '+LICOES[i+1].titulo:''), true);
   log('✓ objectivo cumprido');
@@ -321,18 +324,18 @@ function concluir(){
    =================================================================== */
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function hi(b){ try{ if(ws&&typeof ws.highlightBlock==="function") ws.highlightBlock(b?b.id:null); }catch(e){} }
-async function execChain(b){ for(;b&&S.running;b=b.getNextBlock()) await execBlock(b); }
-async function execBlock(b){ hi(b);
+async function execChain(b,gen){ for(;b&&S.running&&S.gen===gen;b=b.getNextBlock()) await execBlock(b,gen); }
+async function execBlock(b,gen){ hi(b);
   switch(b.type){
-    case 'para_sempre': while(S.running){ await execChain(b.getInputTargetBlock('FAZER')); await sleep(40);} break;
-    case 'repetir':{ const n=+b.getFieldValue('VEZES')||0; for(let i=0;i<n&&S.running;i++){ await execChain(b.getInputTargetBlock('FAZER')); await sleep(15);} break; }
+    case 'para_sempre': while(S.running&&S.gen===gen){ await execChain(b.getInputTargetBlock('FAZER'),gen); await sleep(40);} break;
+    case 'repetir':{ const n=+b.getFieldValue('VEZES')||0; for(let i=0;i<n&&S.running&&S.gen===gen;i++){ await execChain(b.getInputTargetBlock('FAZER'),gen); await sleep(15);} break; }
     case 'esperar': await sleep((+b.getFieldValue('SEG')||0)*1000); break;
     case 'ligar_led':{ const p=+b.getFieldValue('PIN'); await adapter.digitalWrite(p,1); log('digitalWrite('+p+', HIGH)'); emitHW({t:'led',pin:p,v:1,btn:S.button,luz:lerLuz()}); break; }
     case 'desligar_led':{ const p=+b.getFieldValue('PIN'); await adapter.digitalWrite(p,0); log('digitalWrite('+p+', LOW)'); emitHW({t:'led',pin:p,v:0,btn:S.button,luz:lerLuz()}); break; }
     case 'mover_servo':{ const a=+b.getFieldValue('ANG'); await adapter.servoWrite(b.getFieldValue('PIN'),a); log('servo → '+a+'°'); emitHW({t:'servo',ang:a}); break; }
     case 'mostrar_monitor':{ const t=b.getFieldValue('TXT'); await adapter.say(t); log('> '+t); break; }
-    case 'se_entao': if(await evalBool(b.getInputTargetBlock('COND'))) await execChain(b.getInputTargetBlock('FAZER')); break;
-    case 'se_senao': if(await evalBool(b.getInputTargetBlock('COND'))) await execChain(b.getInputTargetBlock('ENTAO')); else await execChain(b.getInputTargetBlock('SENAO')); break;
+    case 'se_entao': if(await evalBool(b.getInputTargetBlock('COND'))) await execChain(b.getInputTargetBlock('FAZER'),gen); break;
+    case 'se_senao': if(await evalBool(b.getInputTargetBlock('COND'))) await execChain(b.getInputTargetBlock('ENTAO'),gen); else await execChain(b.getInputTargetBlock('SENAO'),gen); break;
   }
 }
 async function evalBool(b){ if(!b) return false;
@@ -347,10 +350,10 @@ async function run(){
   if(adapter.needsConnect && !(adapter.port||adapter.dev)){ toast('Liga a placa primeiro (botão azul).'); return; }
   const top=ws.getTopBlocks(true).find(x=>x.type==='ao_iniciar');
   if(!top){ toast('Começa com o bloco “ao iniciar”.'); return; }
-  S.running=true; resetVerif(); verif.ativa = !!LICOES[estado.atual].criterio;
+  S.running=true; const gen=S.gen=(S.gen||0)+1; resetVerif(); verif.ativa = !!LICOES[estado.atual].criterio;
   log('▶ a correr no '+adapter.name);
-  try{ await execChain(top.getNextBlock()); }catch(e){ log('⚠ '+e.message); }
-  hi(null); S.running=false;
+  try{ await execChain(top.getNextBlock(),gen); }catch(e){ log('⚠ '+e.message); }
+  hi(null); if(S.gen===gen) S.running=false;
 }
 function stopRun(){ S.running=false; hi(null); if(_ledTimer){clearTimeout(_ledTimer);_ledTimer=null;} const el=document.getElementById('led'); el.classList.remove('on'); el.dataset.lit='0'; }
 
