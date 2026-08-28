@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jarbas</title>
+<meta name="theme-color" content="#2038A6">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Jarbas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Asap:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --creme:#FAF0E1; --azul:#2038A6; --laranja:#FA6415; --preto:#1a1a1a; }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    font-family:'Asap',system-ui,sans-serif;
+    background:var(--creme); color:var(--preto);
+    display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+    min-height:100dvh; padding:max(24px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom));
+    text-align:center;
+  }
+  header{margin-top:8vh}
+  .mark{
+    width:120px;height:120px;border-radius:28px;background:var(--azul);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 20px;
+    box-shadow:0 10px 30px rgba(32,56,166,.25);
+  }
+  .mark span{color:var(--creme);font-weight:700;font-size:64px;line-height:1;transform:rotate(-3deg)}
+  h1{font-size:34px;margin:0 0 6px;color:var(--azul);letter-spacing:.5px}
+  p.sub{margin:0;font-size:16px;color:#5b5b5b;max-width:320px}
+  .hint{
+    max-width:340px;font-size:14px;color:#6b6b6b;line-height:1.5;
+    background:#fff;border-radius:16px;padding:14px 16px;margin:0 auto;
+    box-shadow:0 4px 14px rgba(0,0,0,.05);
+  }
+  .hint b{color:var(--laranja)}
+  footer{font-size:12px;color:#9a9a9a;margin-bottom:4px}
+  /* dá destaque ao botão do widget */
+  elevenlabs-convai{--el-accent-color:var(--azul);}
+</style>
+</head>
+<body>
+  <header>
+    <div class="mark" aria-hidden="true"><span>J</span></div>
+    <h1>Jarbas</h1>
+    <p class="sub">O teu assistente de voz do Buinho. Carrega no botão em baixo e fala.</p>
+  </header>
+
+  <div class="hint">
+    Melhor com <b>auscultadores</b> e em <b>WiFi</b>. Para instalar como app: menu do browser → <b>Adicionar ao ecrã principal</b>.
+  </div>
+
+  <footer>Buinho FabLab · Messejana</footer>
+
+  <!-- Widget de conversação ElevenLabs -->
+  <elevenlabs-convai agent-id="agent_0201m13wy50de8ttt760g417n59b"></elevenlabs-convai>
+  <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function(){
+        navigator.serviceWorker.register('sw.js').catch(function(){});
+      });
+    }
+  </script>
+</body>
+</html>
