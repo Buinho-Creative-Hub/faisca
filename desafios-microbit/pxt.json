@@ -1,0 +1,17 @@
+{
+    "name": "desafios-microbit",
+    "version": "0.0.1",
+    "description": "Desafios micro:bit do Buinho — cada desafio desbloqueia blocos novos",
+    "dependencies": {
+        "core": "*",
+        "radio": "*",
+        "microphone": "*"
+    },
+    "files": [
+        "main.blocks",
+        "main.ts",
+        "README.md",
+        "desafios.md"
+    ],
+    "preferredEditor": "blocksprj"
+}
