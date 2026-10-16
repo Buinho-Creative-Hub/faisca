@@ -1,0 +1,40 @@
+# Faísca · Desafios micro:bit
+
+Editor de blocos do Buinho para quem nunca programou (10+ anos). Os blocos têm o aspecto do MakeCode (mesmas formas, cores das gavetas e letra), mas a caixa só mostra os blocos de cada desafio: **cada desafio feito desbloqueia blocos novos**.
+
+Funciona **sem internet e sem instalar nada**: é só abrir o `index.html` no Chrome ou no Edge (no Windows, duplo clique em `Abrir Faisca.bat`).
+
+## Os desafios
+
+| # | Desafio | O que tem de acontecer | Blocos novos | Material |
+|---|---|---|---|---|
+| 1 | Acorda-o | agitar → cara contente | em agitar · mostrar ícone | micro:bit |
+| 2 | Coração a bater | logotipo → coração bate 4 vezes | ao logotipo pressionado · repetir · pausa | micro:bit V2 |
+| 3 | Sim ou não? | A contente · B triste | no botão premido | micro:bit |
+| 4 | Faz barulho | A+B → som | tocar som | micro:bit V2 |
+| 5 | Piano de fruta | tocar no P1 → nota | no pin premido · tocar tom | 2 crocodilos + fruta |
+| 6 | Luz de fora | LED no P2 acende com a nota | gravação digital | LED + 2 crocodilos |
+| ★ | Inventa | livre | para sempre · se/senão · está escuro · botão premido · limpar ecrã | — |
+
+A Faísca verifica sozinha quando o desafio está cumprido (no micro:bit do ecrã ou no verdadeiro) e abre o seguinte. O progresso fica guardado no browser de cada computador.
+
+**Modo professor:** abrir `index.html?todos=1` desbloqueia todos os desafios.
+
+## micro:bit do ecrã e micro:bit verdadeiro
+
+Os miúdos testam no micro:bit desenhado (botões A, B, A+B, Agitar, logotipo e pinos 0 e 1 são clicáveis). Com **Ligar micro:bit**, o mesmo programa passa a mexer também no micro:bit verdadeiro, por Bluetooth, e os botões, o agitar, o logotipo e os pinos da placa contam para os desafios.
+
+Para isso, cada micro:bit V2 tem de ter **uma vez** o programa companheiro: <https://github.com/Buinho-Creative-Hub/microbit-desafios> (instruções no README desse repo; cópia em `microbit/faisca-companheiro.ts`).
+
+## Ficheiros
+
+| Ficheiro | O que é |
+|---|---|
+| `js/blocks.js` | blocos e o renderer «makecode» (zelos com as medidas do MakeCode) |
+| `js/desafios.js` | os desafios — para criar outro, acrescenta-se um objecto à lista |
+| `js/motor.js` | corre o programa (eventos, repetir, pausas) no ecrã e na placa |
+| `js/sim.js` | micro:bit no ecrã e sons |
+| `js/ble.js` | ligação Bluetooth ao programa companheiro |
+| `vendor/` | Blockly 12 (Apache 2.0), local para funcionar offline |
+
+Buinho FabLab · Messejana · CC BY-SA 4.0

@@ -1,0 +1,178 @@
+@font-face { font-family: 'Asap'; src: url('../fonts/Asap-Regular_0.ttf') format('truetype'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Asap'; src: url('../fonts/Asap-Bold_0.ttf') format('truetype'); font-weight: 700; font-display: swap; }
+
+:root {
+  --azul: #2364ff;
+  --azul-escuro: #1a4fd1;
+  --sol: #ffc850;
+  --vermelho: #ff5050;
+  --tinta: #010101;
+  --parede: #fafafa;
+  --cinza: #5a5a5a;
+  --linha: #e3e3e3;
+  --area: #ecf0f1;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--parede);
+  color: var(--tinta);
+  font-family: 'Asap', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------- topo */
+.topo {
+  flex: 0 0 auto;
+  height: 68px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: var(--tinta);
+  color: var(--parede);
+}
+.marca { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+.marca-icone { width: 32px; height: 32px; }
+.marca-nome { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+.marca-sub { font-size: 14px; color: var(--sol); }
+
+.caminho { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; gap: 0; }
+.passo {
+  position: relative;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 2px solid #555;
+  background: transparent;
+  color: #9a9a9a;
+  font: 700 17px 'Asap', sans-serif;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.passo + .passo { margin-left: 22px; }
+.passo + .passo::before {
+  content: ''; position: absolute; right: 100%; top: 50%;
+  width: 24px; height: 2px; background: #555; margin-right: 0;
+}
+.passo.feito { background: var(--azul); border-color: var(--azul); color: #fff; }
+.passo.feito + .passo::before, .passo.feito + .passo.feito::before { background: var(--azul); }
+.passo.atual { background: var(--sol); border-color: var(--sol); color: var(--tinta); box-shadow: 0 0 0 4px rgba(255, 200, 80, 0.25); }
+.passo.fechado { cursor: not-allowed; }
+.passo.fechado svg { width: 16px; height: 16px; }
+.passo:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+.ligacao { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
+.estado { font-size: 14px; color: #cfcfcf; }
+.estado.ok { color: var(--sol); font-weight: 700; }
+
+/* ---------------------------------------------------------------- botões */
+.btn {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 4px;
+  border: 0;
+  font: 700 16px 'Asap', sans-serif;
+  cursor: pointer;
+}
+.btn:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.btn-claro { background: var(--parede); color: var(--tinta); }
+.btn-claro:hover { background: #fff; }
+.btn-escuro { background: var(--tinta); color: var(--parede); }
+.btn-escuro:hover { background: #222; }
+.btn-texto { background: transparent; color: var(--tinta); border: 2px solid var(--tinta); }
+.btn-sim { background: #fff; color: var(--tinta); border: 2px solid var(--tinta); flex: 1 1 0; padding: 0 8px; }
+.btn-sim:hover { background: var(--sol); }
+.btn-sim[aria-pressed="true"] { background: var(--tinta); color: var(--parede); }
+.btn-recomecar { border-color: #9a9a9a; color: var(--cinza); }
+
+/* ---------------------------------------------------------------- palco */
+.palco { flex: 1 1 auto; display: flex; min-height: 0; }
+.lado {
+  flex: 0 0 360px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--linha);
+  background: #fff;
+  overflow-y: auto;
+}
+.missao { padding: 16px 22px 14px; border-bottom: 1px solid var(--linha); }
+.missao-num { font-size: 14px; font-weight: 700; color: var(--azul); }
+.missao h1 { margin: 2px 0 8px; font-size: 30px; line-height: 1.1; }
+.missao-frase {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  background: var(--sol);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.missao-passos { margin: 0 0 12px; padding-left: 22px; font-size: 16px; line-height: 1.45; }
+.missao-passos li + li { margin-top: 4px; }
+.missao-material { font-size: 14px; color: var(--cinza); }
+.missao-material strong { color: var(--tinta); }
+
+.sim { padding: 14px 22px 20px; display: flex; flex-direction: column; gap: 12px; }
+.sim-placa svg { width: 100%; height: auto; max-height: 34vh; display: block; margin: 0 auto; }
+.sim-comandos { display: flex; gap: 8px; flex-wrap: wrap; }
+.sim-toque { cursor: pointer; outline: none; }
+.sim-toque:hover > *:first-child, .sim-toque:focus-visible > *:first-child { filter: brightness(1.35); }
+.sim-led { transition: opacity 60ms linear; }
+@keyframes agitar { 0%,100% { transform: rotate(0) } 20% { transform: rotate(-4deg) } 40% { transform: rotate(4deg) } 60% { transform: rotate(-3deg) } 80% { transform: rotate(2deg) } }
+.a-agitar { animation: agitar 420ms ease-in-out; transform-origin: 50% 50%; }
+
+/* ---------------------------------------------------------------- editor */
+.editor { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; }
+.editor-barra {
+  flex: 0 0 auto;
+  height: 56px;
+  padding: 0 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  border-bottom: 1px solid var(--linha);
+  background: #fff;
+}
+.editor-dica { font-size: 15px; color: var(--cinza); }
+.blocos { flex: 1 1 auto; position: relative; min-height: 0; }
+
+/* Blockly: como o MakeCode */
+.blocklyFlyoutLabelText { fill: #5a5a5a !important; font: 700 14px 'Asap', sans-serif !important; }
+.valor.blocklyShadow > .blocklyField .blocklyText { fill: #575e75 !important; }
+.valor.blocklyShadow > .blocklyField image { filter: brightness(0.34); }
+.valor.blocklyShadow > path.blocklyPath { stroke: #bfbfbf; }
+.blocklyMainBackground { stroke: none !important; }
+.blocklyFlyoutBackground { fill: #fff !important; }
+.blocklyDropDownDiv { font-family: 'Asap', sans-serif; }
+.blocklyMenuItem { font-family: 'Asap', sans-serif !important; font-size: 16px !important; }
+
+/* ---------------------------------------------------------------- festa */
+.festa {
+  position: fixed; inset: 0;
+  background: rgba(1, 1, 1, 0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.festa[hidden] { display: none; }
+.festa-cartao {
+  width: min(460px, calc(100vw - 32px));
+  padding: 32px 32px 28px;
+  background: #fff;
+  border-radius: 4px;
+  text-align: center;
+}
+.festa-estrela { width: 96px; height: 96px; animation: salto 600ms ease-out; }
+@keyframes salto { 0% { transform: scale(0.3) rotate(-20deg); } 70% { transform: scale(1.1); } 100% { transform: scale(1); } }
+.festa h2 { margin: 8px 0 6px; font-size: 34px; }
+.festa p { margin: 0 0 22px; font-size: 18px; }
+.festa-botoes { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+@media (max-width: 900px) {
+  body { overflow: auto; }
+  .topo { height: auto; flex-wrap: wrap; padding: 10px 16px; gap: 10px; }
+  .caminho { order: 3; flex-basis: 100%; }
+  .palco { flex-direction: column; }
+  .lado { flex-basis: auto; border-right: 0; }
+  .editor { min-height: 520px; }
+}

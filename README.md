@@ -20,6 +20,10 @@ Projeto aberto do [Buinho FabLab](https://buinho.eu) · Messejana, Alentejo.
 Sem contas nem currículo ainda — é o *playground*. As lições (dados) e as
 turmas/progresso são fatias seguintes (ver `strategy/modelo-faisca.md` no buinho-os).
 
+
+## Desafios micro:bit (Out 2026)
+Modo para iniciação (10+ anos): blocos com o aspecto do MakeCode, desafios que desbloqueiam blocos, micro:bit no ecrã e ligação Bluetooth ao verdadeiro. Ver [`desafios/`](desafios/).
+
 ## Como usar
 Abre `index.html`. Escolhe a placa em cima, monta blocos, **▶ Correr**.
 Arduino/micro:bit precisam de Chrome ou Edge (PC ou Android); o simulador corre
