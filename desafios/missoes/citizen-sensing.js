@@ -766,9 +766,9 @@
       },
     },
 
-    // ---------------------------------------------------------- 17 · Guardiã da horta
+    // ---------------------------------------------------------- 17 · Planta com sede
     {
-      titulo: 'Guardiã da horta',
+      titulo: 'Planta com sede',
       missao: 'Dois pregos na terra medem a humidade; se a planta tiver sede, o micro:bit apita.',
       passos: ['Pregos na terra, com crocodilos ao pin 1 e ao GND.', '«para sempre»: gráfico de «leitura analógica pin P1» até 1023.', 'Se a leitura < 300, «tocar tom». Experimenta com o controlo do pin 1.'],
       material: 'micro:bit, 2 pregos, 2 crocodilos, um vaso com terra',
@@ -798,7 +798,7 @@
           ], 'Agora apita com sede!'),
           P.bloco('sempre', 'mk_tom', 'Já sabe que a planta tem sede… Como é que ela chama por nós?'),
         ],
-        sucesso: 'Guardiã da horta pronta! Terra molhada deixa passar mais eletricidade entre os pregos; terra seca, menos.',
+        sucesso: 'A planta já sabe pedir água! Terra molhada deixa passar mais eletricidade entre os pregos; terra seca, menos.',
         extensao: 'Registem a humidade todas as manhãs durante uma semana. Quando é que a horta precisa mesmo de água?',
         gambiarra: {
           xml: xml(sempre(seq(sGraf('<block type="mk_ler_analogico"><field name="P">P1</field></block>', 255),
