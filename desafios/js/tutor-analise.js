@@ -90,7 +90,7 @@
 
   F.analisar = analisar;
 
-  // Ajudas para as regras dos pacotes (lêem um evento da análise)
+  // Ajudas para as regras das missões (lêem um evento da análise)
   F.ajudasTutor = {
     icones: (ev, nome) => ev ? ev.plano.filter(p => p.tipo === 'mk_icone' && (!nome || p.icone === nome)) : [],
     tem: (ev, tipo) => !!ev && ev.plano.some(p => p.tipo === tipo),

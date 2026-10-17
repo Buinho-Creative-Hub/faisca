@@ -1,7 +1,7 @@
-/* Faísca Desafios — base dos desafios (comum a todos os pacotes).
- * Os desafios em si vivem nos pacotes (pacotes/<id>.js), que os registam com
- * Faisca.registarPacote({...}). Aqui ficam os blocos da caixa, as ajudas de
- * verificação por comportamento e a montagem da caixa de cada desafio.
+/* Faísca Desafios — base dos desafios (comum a todas as missões e mascotes).
+ * As missões (missoes/<id>.js) e as mascotes (mascotes/<id>.js) registam-se aqui.
+ * Aqui ficam os blocos da caixa, as ajudas de verificação por comportamento,
+ * a montagem da caixa de cada desafio e a junção mascote × missão.
  */
 (function () {
   'use strict';
@@ -102,14 +102,44 @@
   F.caixa = caixa;
   F.verif = { depois, conta, visiveis, algumPino, causou };
 
-  // ---------------------------------------------------- pacotes
-  // Um pacote junta mascote, marca, mensagens gerais e a lista de desafios.
-  // Cada desafio traz a sua parte pedagógica em «tutor» (regras, pistas, gambiarra),
-  // para que o desafio e as pistas nunca fiquem desemparelhados.
-  F.registarPacote = function (p) {
-    if (p.xml) Object.assign(XML, p.xml);
-    F.PACOTE = p;
-    F.DESAFIOS = p.desafios;
-    F.TUTOR = { DESAFIOS: p.desafios.map(d => d.tutor), COMUNS: p.comuns || [], GERAIS: p.gerais };
+  // ---------------------------------------------------- mascotes e missões
+  // MASCOTE = quem acompanha (nome, género, ilustrações, voz, tema, sons).
+  // MISSÃO  = o que se faz (níveis → desafios). Cada desafio traz a sua parte pedagógica
+  //           em «tutor» (regras, pistas, gambiarra), escrita para servir qualquer mascote.
+  // A criança escolhe as duas coisas; o motor junta-as em F.DESAFIOS / F.TUTOR.
+  F.MASCOTES = {};
+  F.MISSOES = {};
+  F.ORDEM_MASCOTES = [];
+  F.ORDEM_MISSOES = [];
+  F.registarMascote = m => { F.MASCOTES[m.id] = m; F.ORDEM_MASCOTES.push(m.id); };
+  F.registarMissao = m => {
+    if (m.xml) Object.assign(XML, m.xml);
+    F.MISSOES[m.id] = m; F.ORDEM_MISSOES.push(m.id);
+  };
+  // desafios de uma missão, por ordem, com o nível de cada um
+  F.desafiosDe = missao => missao.niveis.flatMap((nv, k) => nv.desafios.map(d => Object.assign(d, { nivel: k, nivelNome: nv.nome })));
+
+  F.ativar = function (mascoteId, missaoId) {
+    const M = F.MASCOTES[mascoteId] || F.MASCOTES[F.ORDEM_MASCOTES[0]];
+    const X = F.MISSOES[missaoId];
+    F.MASCOTE = M;
+    F.MISSAO = X;
+    F.DESAFIOS = F.desafiosDe(X);
+    F.TUTOR = {
+      DESAFIOS: F.DESAFIOS.map(d => d.tutor),
+      COMUNS: [...(X.comuns || []), ...(M.comuns || [])],
+      GERAIS: M.gerais,
+    };
+  };
+
+  // Voz da mascote. Um texto pode ser:
+  //   'texto'                              igual para todas
+  //   { nico: '…', gabi: '…', _: '…' }     um por mascote (_ = as outras)
+  // e pode ter: {ola} → apresentação da mascote · [o|a] → masculino|feminino · {nome}
+  F.voz = function (t, M = F.MASCOTE) {
+    if (t && typeof t === 'object') t = t[M.id] !== undefined ? t[M.id] : t._;
+    if (!t) return t;
+    return t.replace(/\{ola\}/g, M.ola).replace(/\{nome\}/g, M.nome)
+      .replace(/\[([^|\]]*)\|([^\]]*)\]/g, (_, mas, fem) => M.artigo === 'a' ? fem : mas);
   };
 })();

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mascote · os estados</title>
-<script src="js/pacote.js"></script>
+<script src="js/escolha.js"></script>
 <link rel="stylesheet" href="css/faisca.css">
 <style>
   body { overflow: auto; display: block; }
@@ -30,12 +30,18 @@
 </main>
 <script src="js/desafios.js"></script>
 <script src="js/tutor-analise.js"></script>
-<script>Faisca.carregarPacote();</script>
+<script src="mascotes/gabi.js"></script>
+<script src="mascotes/nico.js"></script>
+<script src="missoes/primeiros-passos.js"></script>
+<script src="missoes/reparar.js"></script>
 <script>
 (function () {
-  const P = Faisca.PACOTE, T = Faisca.TUTOR;
-  document.getElementById('titulo').textContent = P.mascote.descricao;
-  document.getElementById('abrir').href = 'index.html?p=' + P.id;
+  Faisca.ativar(Faisca.MASCOTE_ID, Faisca.ORDEM_MISSOES[0]);
+  const M = Faisca.MASCOTE, P = { mascote: M }, T = Faisca.TUTOR;
+  // exemplos de todas as missões, ditos por esta mascote
+  T.DESAFIOS = Faisca.ORDEM_MISSOES.flatMap(id => Faisca.desafiosDe(Faisca.MISSOES[id]).map(d => d.tutor));
+  document.getElementById('titulo').textContent = M.descricao;
+  document.getElementById('abrir').href = 'index.html?a=' + M.id;
   // quando aparece cada estado (o motor é comum a todos os pacotes)
   const QUANDO = {
     boas_vindas: 'Ao entrar num desafio.',
@@ -50,7 +56,7 @@
   };
   // um exemplo real de cada estado, tirado das mensagens do pacote
   const ex = {};
-  const ver = (e, t) => { if (t && !ex[e]) ex[e] = t; };
+  const ver = (e, t) => { t = Faisca.voz(t); if (t && !ex[e]) ex[e] = t; };
   Object.values(T.GERAIS).forEach(([e, t]) => ver(e, t));
   T.DESAFIOS.forEach(d => { if (!d) return; ver(d.boasVindas[0], d.boasVindas[1]); ver('testar', d.testar); ver('celebrar', d.sucesso);
     [...d.regras, ...T.COMUNS].forEach(r => { r.pistas.forEach(([e, t]) => ver(e, t)); ver('incentivar', r.corrigido); });

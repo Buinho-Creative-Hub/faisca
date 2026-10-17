@@ -1,5 +1,5 @@
 /* Tutor (mascote) — motor pedagógico. Decide QUANDO e O QUE a mascote diz.
- * O conteúdo (regras, pistas, mensagens) vem do pacote: F.TUTOR.
+ * O conteúdo vem da missão (regras, pistas) e da mascote (mensagens gerais): F.TUTOR.
  * Não toca na interface: recebe acontecimentos e devolve mensagens por callback.
  *
  *   entrarDesafio(n)        a criança abriu um desafio
@@ -51,6 +51,7 @@
 
     // ------------------------------------------------------------- saída
     falar(estado, texto, tipo, extra = {}) {
+      texto = F.voz(texto);                // a mesma regra, dita pela mascote escolhida
       if (!texto) return false;
       if (texto === this.ultimoTexto && tipo !== 'pista') return false; // não repetir
       this.ultimoTexto = texto;
@@ -146,7 +147,7 @@
       const primeira = !this.concluido && !this.jaFeito;
       this.concluido = true;
       const rapido = this.agora() - this.entrada < RAPIDO_MS;
-      return { estado: 'celebrar', texto: this.d.sucesso, extensao: primeira && rapido ? this.d.extensao : '' };
+      return { estado: 'celebrar', texto: F.voz(this.d.sucesso), extensao: primeira && rapido ? F.voz(this.d.extensao) : '' };
     }
 
     tick() {

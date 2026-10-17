@@ -1,44 +1,28 @@
-/* Pacote Gabi — Faísca Desafios com a Gabi, a capivara da gambiarra.
+/* Missão «Primeiros passos» — programação e robótica com o micro:bit.
  *
- * Um pacote = mascote + marca + mensagens + desafios. O motor é comum (js/).
- * Conteúdo original de 16–17 Out 2026, testado com micro:bit V2; mantido tal e qual.
+ * Os 6 desafios da Faísca Desafios (16–17 Out 2026, testados com micro:bit V2) + o desafio livre.
+ * Conteúdo da primeira versão com a Gabi, agora escrito para qualquer mascote ({ola}, [o|a]).
  *
  * Cada regra pedagógica descreve uma dificuldade que se reconhece no programa:
  *   id         nome curto
  *   ativa(a)   true quando a dificuldade está presente (a = análise do programa)
  *   pistas     três níveis: [estado do sprite, texto]
  *                1 pista conceptual · 2 pista orientadora · 3 ajuda concreta
- *   corrigido  o que a Gabi diz quando a criança resolve sozinha
+ *   corrigido  o que a mascote diz quando a criança resolve sozinha
  * As regras são lidas pela ordem: a primeira activa é a que conta.
  * O sucesso NÃO é decidido nas regras: é o comportamento do programa (ok).
- *
- * Estados do sprite: boas_vindas, curiosa, a_pensar, surpreendida, dica, celebrar, incentivar, calma, testar
  */
 (function () {
   'use strict';
-  const F = window.Faisca = window.Faisca || {};
-
+  const F = window.Faisca;
   const { icones, tem, soltoCom } = F.ajudasTutor;
   const { depois, visiveis, algumPino } = F.verif;
 
-  // Regras comuns a todos os desafios (vêm depois das específicas)
-  const COMUNS = [
-    {
-      id: 'blocos_soltos',
-      ativa: a => a.soltos.length > 0,
-      pistas: [
-        ['a_pensar', 'Tens blocos soltos na área cinzenta. Será que eles sabem quando começar?'],
-        ['dica', 'Os blocos que fazem coisas só correm se estiverem dentro de um bloco cor-de-rosa.'],
-        ['dica', 'Arrasta os blocos soltos para dentro da boca de um bloco cor-de-rosa.'],
-      ],
-      corrigido: 'Isso! Agora esses blocos já sabem quando começar.',
-    },
-  ];
-
+  // ------------------------------------------------------------ pistas (pela ordem dos desafios)
   const TUTOR = [
     // ---------------------------------------------------------- 1 · Acorda-o
     {
-      boasVindas: ['boas_vindas', 'Olá! Sou a Gabi, a capivara da gambiarra. Vamos acordar este micro:bit? Quero vê-lo sorrir quando o agitas.'],
+      boasVindas: ['boas_vindas', '{ola} Vamos acordar este micro:bit? Quero vê-lo sorrir quando o agitas.'],
       parecePronto: a => icones(a.evento('agitar'), 'Happy').length > 0,
       testar: 'Parece-me bem! Mas só acredito vendo: carrega em AGITAR.',
       regras: [
@@ -393,17 +377,6 @@
     },
   ];
 
-  // Mensagens que não dependem do desafio
-  const GERAIS = {
-    convite: ['curiosa', 'Precisas de uma ajudinha? Carrega em «Ajuda».'],
-    calma: ['calma', 'Respira fundo… Não funcionou à primeira? A mim também não. Queres uma pista?'],
-    semPistas: ['incentivar', 'Estás no bom caminho. Experimenta e vê o que acontece!'],
-    vazio: ['curiosa', 'A área cinzenta está vazia. Que tal arrastar o primeiro bloco da coluna branca?'],
-    testeFalhou: ['a_pensar', 'Hmm… ainda não é bem isso. Olha para o micro:bit: o que é que ele fez?'],
-    gambiarraObrigada: ['celebrar', 'Obrigada! Reparaste a minha gambiarra. És mesmo maker!'],
-    voltarPrograma: ['incentivar', 'De volta ao teu programa. Obrigada pela ajuda!'],
-  };
-
   // ------------------------------------------------------------ desafios (o que se pede e como se valida)
   const DESAFIOS = [
     {
@@ -478,29 +451,18 @@
     },
   ];
 
-  F.registarPacote({
-    id: 'gabi',
-    chave: 'faisca.desafios.v1',          // mantém o progresso já guardado nos computadores
-    hex: 'faisca',                        // faisca-desafio-N.hex, como antes
-    titulo: 'Faísca · Desafios micro:bit',
-    marca: {
-      nome: 'Faísca',
-      sub: 'desafios micro:bit',
-      icone: '<svg class="marca-icone" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#2364ff"/><path d="M18 4 8 18h7l-2 10 11-15h-7z" fill="#ffc850"/></svg>',
-    },
-    mascote: {
-      nome: 'Gabi',
-      descricao: 'Gabi, a capivara da gambiarra',
-      artigo: 'a',                          // «Esconder a Gabi», «Ajudar a Gabi»
-      pasta: 'img/gabi/',
-      sprites: {
-        boas_vindas: '01_boas_vindas', curiosa: '02_curiosa', a_pensar: '03_a_pensar', surpreendida: '04_surpreendida',
-        dica: '05_a_dar_uma_dica', celebrar: '06_a_celebrar', incentivar: '07_a_incentivar', calma: '08_calma',
-        testar: '02_curiosa',
-      },
-    },
-    comuns: COMUNS,
-    gerais: GERAIS,
-    desafios: DESAFIOS.map((d, i) => Object.assign(d, { tutor: TUTOR[i] })),
+  const D = DESAFIOS.map((d, i) => Object.assign(d, { tutor: TUTOR[i] }));
+  F.registarMissao({
+    id: 'primeiros-passos',
+    titulo: 'Primeiros passos',
+    tema: 'Programação e robótica',
+    descricao: 'Acorda o micro:bit, faz um coração bater, um piano de fruta e uma luz de fora.',
+    cor: '#2364ff',
+    chave: 'faisca.desafios.v1',     // o progresso que já estava guardado continua a valer
+    niveis: [
+      { nome: 'Nível 1 · Primeiros sinais', desafios: D.slice(0, 3) },
+      { nome: 'Nível 2 · Som e circuitos', desafios: D.slice(3, 6) },
+      { nome: 'Livre', desafios: D.slice(6) },
+    ],
   });
 })();

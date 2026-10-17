@@ -1,5 +1,5 @@
 /* Tutor (mascote) — apresentação. Só mostra o que o motor decide (tutor-motor.js).
- * Nome, sprites e artigo vêm do pacote (F.PACOTE.mascote).
+ * Nome, sprites e artigo vêm da mascote escolhida (F.MASCOTE).
  */
 (function () {
   'use strict';
@@ -8,7 +8,7 @@
   class TutorUI {
     constructor(mascote) {
       this.m = mascote;
-      this.chave = 'faisca.' + F.PACOTE.id + '.recolhida';   // Gabi: a mesma chave de antes
+      this.chave = 'faisca.' + mascote.id + '.recolhida';   // Gabi: a mesma chave de antes
       this.root = document.getElementById('tutor');
       this.img = document.getElementById('tutorImg');
       this.avatar = document.getElementById('tutorAvatar');

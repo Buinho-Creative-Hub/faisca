@@ -32,7 +32,7 @@ A **Gabi, a capivara da gambiarra**, é a tutora: observa o que a criança faz n
 - Convite discreto quando a criança está parada; pode ser recolhida a qualquer momento.
 - **«Ajudar a Gabi»**: num desafio já feito, a Gabi mostra uma gambiarra dela que não funciona e pede ajuda para a reparar.
 
-Regras e mensagens em `pacotes/gabi.js`. Demonstração dos estados em `estados.html` (`estados.html?p=nico` para o Nico). Testes e limitações em `TESTES-GABI.md`; testes automáticos: `node testes/testar.js`.
+Mascotes em `mascotes/`, missões (desafios e pistas) em `missoes/`. Demonstração dos estados em `estados.html` (`estados.html?a=nico` para o Nico). Testes e limitações em `TESTES-GABI.md`; testes automáticos: `node testes/testar.js`.
 
 ## micro:bit do ecrã e micro:bit verdadeiro
 
@@ -55,9 +55,11 @@ Com **Bluetooth**, o mesmo programa mexe ao vivo no micro:bit verdadeiro e os bo
 | Ficheiro | O que é |
 |---|---|
 | `js/blocks.js` | blocos e o renderer «makecode» (zelos com as medidas do MakeCode) |
-| `pacotes/<id>.js` | **conteúdo**: mascote, marca, mensagens e desafios (cada desafio com a sua parte pedagógica). `gabi.js`, `nico.js` |
-| `js/pacote.js` | escolhe o pacote (`index.html?p=nico`; por defeito a Gabi) |
-| `js/desafios.js` | base comum: blocos da caixa, verificação por comportamento, caixa de cada desafio, `registarPacote` |
+| `mascotes/*.js` | quem acompanha: Gabi, Nico (perfil, voz, ilustrações, música) |
+| `missoes/*.js` | o conteúdo: missões → níveis → desafios, cada um com as suas pistas |
+| `js/escolha.js`, `js/inicio.js` | ecrã inicial: escolher mascote e missão (`index.html?a=nico&m=reparar` vai direto) |
+| `js/som.js` | música de fundo e efeitos sonoros (botões para desligar) |
+| `js/desafios.js` | base comum: blocos da caixa, verificação por comportamento, junção mascote × missão |
 | `js/motor.js` | corre o programa (eventos, repetir, pausas) no ecrã e na placa |
 | `js/sim.js` | micro:bit no ecrã e sons |
 | `js/ble.js` | ligação Bluetooth ao programa companheiro |

@@ -1,27 +1,37 @@
-/* Faísca Desafios — cola tudo: pacote (mascote + desafios), editor, micro:bit do ecrã e o verdadeiro. */
+/* Faísca Desafios — cola tudo: mascote + missão escolhidas, editor, micro:bit do ecrã e o verdadeiro. */
 (function () {
   'use strict';
   const F = window.Faisca;
   const $ = id => document.getElementById(id);
-  const P = F.PACOTE;
-  const CHAVE = P.chave || ('faisca.' + P.id + '.v1');
-  const params = new URLSearchParams(location.search);
 
-  // ------------------------------------------------------------ marca e mascote do pacote
-  document.title = P.titulo;
-  $('marcaIcone').innerHTML = P.marca.icone || '';     // conteúdo do próprio pacote, não da criança
-  $('marcaNome').textContent = P.marca.nome;
-  $('marcaSub').textContent = P.marca.sub;
-  $('tutor').setAttribute('aria-label', P.mascote.descricao);
-  $('tutorNome').textContent = P.mascote.nome;
-  $('tutorGambiarra').textContent = 'Ajudar ' + P.mascote.artigo + ' ' + P.mascote.nome;
+  // Sem missão escolhida: ecrã inicial (inicio.js) e mais nada
+  if (!F.MISSAO_ID || !F.MISSOES[F.MISSAO_ID]) { F.mostrarInicio(); return; }
+  F.ativar(F.MASCOTE_ID, F.MISSAO_ID);
+  const M = F.MASCOTE, X = F.MISSAO;
+  F.lembrarMascote(M.id);
+  document.documentElement.setAttribute('data-mascote', M.id);
+  const CHAVE = F.chaveMissao(X);
+  const params = new URLSearchParams(location.search);
+  const N = F.DESAFIOS.length;
+  const contaveis = F.DESAFIOS.filter(d => !d.livre).length;
+
+  // ------------------------------------------------------------ marca e mascote
+  document.title = M.marca.nome + ' · ' + X.titulo;
+  $('marcaIcone').innerHTML = M.marca.icone || '';     // conteúdo da própria mascote, não da criança
+  $('marcaNome').textContent = M.marca.nome;
+  $('marcaSub').textContent = X.titulo;
+  $('btnMissoes').href = 'index.html?a=' + encodeURIComponent(M.id);
+  $('tutor').setAttribute('aria-label', M.descricao);
+  $('tutorNome').textContent = M.nome;
+  $('tutorGambiarra').textContent = 'Ajudar ' + M.artigo + ' ' + M.nome;
 
   // ------------------------------------------------------------ estado guardado
   function ler() { try { return JSON.parse(localStorage.getItem(CHAVE)) || {}; } catch (e) { return {}; } }
   function gravar() { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) { /* sem armazenamento: segue */ } }
   const estado = Object.assign({ feitos: 0, atual: 0, xml: '' }, ler());
-  if (params.has('todos')) estado.feitos = F.DESAFIOS.length - 1;   // modo professor
-  const desbloqueado = i => i <= Math.min(estado.feitos, F.DESAFIOS.length - 1);
+  if (params.has('todos')) estado.feitos = Math.max(estado.feitos, N - 1);   // modo professor
+  const desbloqueado = i => i <= Math.min(estado.feitos, N - 1);
+  if (estado.atual >= N) estado.atual = N - 1;
   if (!desbloqueado(estado.atual)) estado.atual = estado.feitos;
 
   // ------------------------------------------------------------ editor
@@ -35,9 +45,22 @@
     zoom: { controls: true, wheel: false, startScale: 1, maxScale: 1.6, minScale: 0.6 },
     move: { scrollbars: true, drag: true, wheel: true },
   });
+  let silencio = true;      // carregar programas não faz barulho; só os gestos da criança
   if (estado.xml) {
     try { Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(estado.xml), ws); } catch (e) { console.warn(e); }
   }
+  setTimeout(() => { silencio = false; }, 0);
+
+  // ------------------------------------------------------------ sons do editor (como no MakeCode/Scratch)
+  let ultimoSom = 0;
+  const somEditor = nome => { const t = performance.now(); if (t - ultimoSom > 80) { ultimoSom = t; F.Som.tocar(nome); } };
+  ws.addChangeListener(ev => {
+    if (silencio || ev.isUiEvent) return;
+    const E = Blockly.Events;
+    if (ev.type === E.BLOCK_MOVE && ev.newParentId && ev.newParentId !== ev.oldParentId) somEditor('encaixe');
+    else if (ev.type === E.BLOCK_CREATE) somEditor('apanhar');
+    else if (ev.type === E.BLOCK_DELETE) somEditor('apagar');
+  });
 
   // ------------------------------------------------------------ micro:bit do ecrã
   const sim = new F.Sim($('sim'), k => entrada(k, 'ecra'));
@@ -46,8 +69,8 @@
     principal: true,
     icone: n => sim.icone(n),
     limpar: () => sim.limpar(),
-    tocarSom: n => sim.tocarSom(n),
-    tom: (f, ms) => sim.tom(f, ms),
+    tocarSom: n => { F.Som.abafar(900); sim.tocarSom(n); },
+    tom: (f, ms) => { F.Som.abafar(ms); sim.tom(f, ms); },
     digital: (p, v) => sim.digital(p, v),
     estaEscuro: () => escuro,
     botoes: sim.botoes,
@@ -56,7 +79,7 @@
   // ------------------------------------------------------------ micro:bit verdadeiro
   const ble = new F.MicrobitBLE(k => entrada(k, 'microbit'), (e, nome) => {
     const el = $('estado');
-    el.classList.toggle('ok', e === 'ligado');
+    el.classList.toggle('ok', e === 'ligado'); el.classList.remove('aviso');
     el.textContent = e === 'ligado' ? 'micro:bit verdadeiro ligado' : e === 'a ligar' ? 'a ligar…' : 'micro:bit do ecrã';
     $('btnLigar').textContent = e === 'ligado' ? 'Desligar' : 'Bluetooth';
     if (e === 'ligado') { ble.enviar('W' + (F.DESAFIOS[estado.atual].livre ? 1 : 0)); reiniciar(); }
@@ -72,10 +95,10 @@
   });
 
   // ------------------------------------------------------------ mascote (tutor)
-  const tutorUI = new F.TutorUI(P.mascote);
-  const tutor = new F.TutorMotor(m => tutorUI.mostrar(m));
+  const tutorUI = new F.TutorUI(M);
+  const tutor = new F.TutorMotor(m => { tutorUI.mostrar(m); F.Som.tocar(m.tipo === 'pista' ? 'ajuda' : 'voz'); });
   $('festaMascote').src = tutorUI.sprite('celebrar');
-  $('festaMascote').alt = P.mascote.nome + ' a celebrar';
+  $('festaMascote').alt = M.nome + ' a celebrar';
   let gambiarra = null;      // { xml } do programa da criança enquanto ajuda a mascote
   let sucessoEm = -Infinity;
   let falha = null;
@@ -122,30 +145,35 @@
       sucessoEm = performance.now();
       if (gambiarra) {
         const [e, t] = F.TUTOR.GERAIS.gambiarraObrigada;
-        tutorUI.mostrar({ estado: e, texto: t, tipo: 'sucesso', pedida: true });
+        F.Som.tocar('sucesso');
+        tutorUI.mostrar({ estado: e, texto: F.voz(t), tipo: 'sucesso', pedida: true });
         return;
       }
       const s = tutor.sucesso();
       if (estado.feitos <= estado.atual) { estado.feitos = estado.atual + 1; gravar(); }
       desenharCaminho();
       atualizarBotoesTutor();
+      F.Som.tocar('sucesso');
       setTimeout(() => festa(s), 900);
     }
   }
 
   function festa(s) {
     const n = estado.atual;
+    const atual = F.DESAFIOS[n];
     const seguinte = F.DESAFIOS[n + 1];
-    $('festaTitulo').textContent = 'Conseguiste!';
-    $('festaTexto').textContent = (s && s.texto) ? s.texto
-      : !seguinte ? 'Fizeste todos os desafios.'
-      : `«${F.DESAFIOS[n].titulo}» está feito. No próximo desafio aparecem blocos novos.`;
+    const novoNivel = seguinte && seguinte.nivel !== atual.nivel && !seguinte.livre;
+    $('festaTitulo').textContent = !seguinte ? 'Missão cumprida!' : novoNivel ? 'Nível desbloqueado!' : 'Conseguiste!';
+    let texto = (s && s.texto) ? s.texto : `«${atual.titulo}» está feito. No próximo desafio aparecem blocos novos.`;
+    if (novoNivel) texto += ` Abriste o ${seguinte.nivelNome}.`;
+    if (!seguinte) texto += ' ' + F.voz(F.TUTOR.GERAIS.fimMissao[1]);
+    $('festaTexto').textContent = texto;
     $('festaExtra').hidden = !(s && s.extensao);
     $('festaExtra').textContent = s && s.extensao ? 'Desafio extra: ' + s.extensao : '';
-    $('btnSeguinte').hidden = !seguinte;
-    $('btnSeguinte').textContent = !seguinte ? '' : seguinte.livre ? 'Inventar o meu brinquedo' : `Desafio ${n + 2}: ${seguinte.titulo}`;
+    $('btnSeguinte').textContent = !seguinte ? 'Escolher outra missão' : seguinte.livre ? 'Inventar a minha engenhoca' : `Desafio ${n + 2}: ${seguinte.titulo}`;
     $('festa').hidden = false;
-    (seguinte ? $('btnSeguinte') : $('btnFicar')).focus();
+    if (novoNivel || !seguinte) setTimeout(() => F.Som.tocar('nivel'), 700);
+    $('btnSeguinte').focus();
   }
 
   function mudarDesafio(n) {
@@ -155,7 +183,7 @@
     festejado = -1;
     gravar();
     const d = F.DESAFIOS[n];
-    $('missaoNum').textContent = d.livre ? 'Desafio livre' : `Desafio ${n + 1} de ${F.DESAFIOS.length - 1}`;
+    $('missaoNum').textContent = d.livre ? 'Desafio livre' : `${d.nivelNome} · desafio ${n + 1} de ${contaveis}`;
     $('missaoTitulo').textContent = d.titulo;
     $('missaoFrase').textContent = d.missao;
     $('missaoPassos').innerHTML = '';
@@ -173,8 +201,10 @@
 
   // ------------------------------------------------------------ a mascote também erra (gambiarra)
   function carregar(xml) {
+    silencio = true;
     ws.clear();
     try { Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(xml), ws); } catch (e) { console.warn(e); }
+    setTimeout(() => { silencio = false; }, 0);
   }
   function atualizarBotoesTutor() {
     const g = F.TUTOR.DESAFIOS[estado.atual] && F.TUTOR.DESAFIOS[estado.atual].gambiarra;
@@ -187,7 +217,8 @@
     festejado = -1;
     carregar(g.xml);
     tutor.reset(); tutor.n = estado.atual;
-    tutorUI.mostrar({ estado: 'surpreendida', texto: g.pedido, tipo: 'gambiarra' });
+    tutorUI.mostrar({ estado: 'surpreendida', texto: F.voz(g.pedido), tipo: 'gambiarra' });
+    F.Som.tocar('voz');
     atualizarBotoesTutor();
   }
   function sairGambiarra(avisar = true) {
@@ -195,7 +226,7 @@
     gambiarra = null;
     carregar(xml || '<xml></xml>');
     festejado = estado.atual;
-    if (avisar) { const [e, t] = F.TUTOR.GERAIS.voltarPrograma; tutorUI.mostrar({ estado: e, texto: t, tipo: 'info' }); }
+    if (avisar) { const [e, t] = F.TUTOR.GERAIS.voltarPrograma; tutorUI.mostrar({ estado: e, texto: F.voz(t), tipo: 'info' }); }
     atualizarBotoesTutor();
   }
 
@@ -212,8 +243,9 @@
       else if (i < estado.feitos) b.classList.add('feito');
       if (!aberto) { b.classList.add('fechado'); b.innerHTML = CADEADO; b.setAttribute('aria-disabled', 'true'); }
       else b.textContent = d.livre ? '★' : String(i + 1);
+      if (i > 0 && d.nivel !== F.DESAFIOS[i - 1].nivel) b.classList.add('novo-nivel');   // separador entre níveis
       b.setAttribute('aria-label', (d.livre ? 'Desafio livre' : `Desafio ${i + 1}`) + `: ${d.titulo}` + (aberto ? '' : ' (fechado)'));
-      b.title = d.titulo;
+      b.title = d.nivelNome + ' — ' + d.titulo;
       b.addEventListener('click', () => mudarDesafio(i));
       nav.appendChild(b);
     });
@@ -233,7 +265,11 @@
   $('tutorGambiarra').addEventListener('click', entrarGambiarra);
   $('tutorVoltar').addEventListener('click', () => sairGambiarra(true));
   $('btnFicar').addEventListener('click', () => { $('festa').hidden = true; });
-  $('btnSeguinte').addEventListener('click', () => { $('festa').hidden = true; mudarDesafio(estado.atual + 1); });
+  $('btnSeguinte').addEventListener('click', () => {
+    $('festa').hidden = true;
+    if (estado.atual + 1 >= N) { location.href = $('btnMissoes').href; return; }
+    mudarDesafio(estado.atual + 1);
+  });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') $('festa').hidden = true; });
 
   let confirmar = null;
@@ -252,19 +288,21 @@
   $('btnLigar').addEventListener('click', async () => {
     if (ble.ligado) { ble.desligar(); return; }
     if (!F.MicrobitBLE.disponivel()) {
+      $('estado').classList.add('aviso');
       $('estado').textContent = 'Para ligar o micro:bit usa o Chrome ou o Edge';
       return;
     }
     try { await ble.ligar(); }
     catch (err) {
       $('estado').classList.remove('ok');
+      $('estado').classList.toggle('aviso', !(err && err.name === 'NotFoundError'));
       $('estado').textContent = err && err.name === 'NotFoundError' ? 'micro:bit do ecrã' : 'Não ligou: ' + (err.message || err);
     }
   });
 
   // ------------------------------------------------ Enviar para o micro:bit (.hex por USB)
   let hexPronto = null;
-  const nomeHex = () => (P.hex || P.id) + '-desafio-' + (estado.atual + 1) + '.hex';
+  const nomeHex = () => (X.hex || X.id) + '-desafio-' + (estado.atual + 1) + '.hex';
   const podeGravar = typeof window.showSaveFilePicker === 'function';
   function estadoEnviar(txt, tipo = '') { const e = $('enviarEstado'); e.textContent = txt; e.className = 'enviar-estado ' + tipo; }
   async function prepararHex() {
@@ -287,10 +325,16 @@
     a.href = url; a.download = nomeHex();
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
-    estadoEnviar('Descarregado! Arrasta o ficheiro ' + nomeHex() + ' para a pasta MICROBIT.', 'ok');
+    estadoEnviar('Descarregado! Agora arrasta o ficheiro ' + nomeHex() + ' da pasta Transferências para a pasta MICROBIT e espera que a luz amarela pare de piscar.', 'ok');
   }
   $('btnGravar').hidden = !podeGravar;
-  if (!podeGravar) $('enviarPasso2').innerHTML = 'Carrega em <strong>Descarregar ficheiro</strong> e arrasta-o para a pasta <strong>MICROBIT</strong>.';
+  if (!podeGravar) {
+    // Firefox/Safari: o browser não deixa gravar diretamente na pasta MICROBIT → descarregar e arrastar, passo a passo
+    $('enviarPasso2').innerHTML = 'Carrega em <strong>Descarregar ficheiro</strong>. O programa vai para a pasta <strong>Transferências</strong>.';
+    $('enviarPasso3').hidden = false;
+    $('enviarNota').hidden = false;
+    $('btnDescarregar').classList.replace('btn-claro', 'btn-escuro');
+  }
   $('btnEnviar').addEventListener('click', () => { $('enviar').hidden = false; prepararHex(); });
   $('btnEnviarFechar').addEventListener('click', () => { $('enviar').hidden = true; });
   $('btnDescarregar').addEventListener('click', descarregar);
@@ -298,7 +342,7 @@
     if (!hexPronto) return;
     try {
       const f = await window.showSaveFilePicker({ suggestedName: nomeHex(), types: [{ description: 'Programa micro:bit', accept: { 'application/octet-stream': ['.hex'] } }] });
-      estadoEnviar('A gravar…');
+      estadoEnviar('A gravar… a luz amarela do micro:bit vai piscar.');
       const w = await f.createWritable();
       await w.write(hexPronto);
       await w.close();
