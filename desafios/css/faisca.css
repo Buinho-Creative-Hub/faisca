@@ -358,3 +358,23 @@ html[data-mascote="nico"] .inicio-topo { background: var(--azul); }
 .topo .estado:not(.ok):not(.aviso) { display: none; }
 .passo.novo-nivel { margin-left: 34px; }
 @media (max-width: 1400px) { .topo .marca-sub { display: none; } .topo { gap: 16px; } }
+
+/* ---------------------------------------------------------------- sensores, variáveis e dados no micro:bit do ecrã */
+.sim-sensores { display: flex; flex-wrap: wrap; gap: 6px 10px; margin: 6px 0 4px; }
+.sim-sensores[hidden] { display: none; }
+.sim-slider { display: grid; grid-template-columns: auto 1fr 3.4em; align-items: center; gap: 8px; width: 100%; font-size: 14px; font-weight: 700; }
+.sim-slider[hidden] { display: none; }
+.sim-slider input { width: 100%; accent-color: var(--azul); }
+.sim-slider output { font-variant-numeric: tabular-nums; text-align: right; color: var(--cinza); }
+.btn-sensor { font-size: 13px; padding: 6px 10px; min-height: 0; }
+.btn-sensor[aria-pressed="true"] { background: var(--sol); }
+.sim-vars { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.sim-vars[hidden] { display: none; }
+.sim-vars span { font-size: 14px; background: #fff; border: 2px solid #dc143c; border-radius: 14px; padding: 2px 10px; font-variant-numeric: tabular-nums; }
+.sim-vars b { color: #dc143c; margin-right: 4px; }
+.sim-dados { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; background: #fff; }
+.sim-dados caption { text-align: left; font-weight: 700; color: #378273; padding-bottom: 2px; }
+.sim-dados td { border: 1px solid var(--linha); padding: 2px 6px; }
+.sim-dados td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.sim-dados[hidden] { display: none; }
+.lado { overflow-y: auto; }

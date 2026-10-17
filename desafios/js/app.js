@@ -69,12 +69,43 @@
     principal: true,
     icone: n => sim.icone(n),
     limpar: () => sim.limpar(),
-    tocarSom: n => { F.Som.abafar(900); sim.tocarSom(n); },
+    tocarSom: n => { F.Som.abafar(900); return sim.tocarSom(n); },
     tom: (f, ms) => { F.Som.abafar(ms); sim.tom(f, ms); },
     digital: (p, v) => sim.digital(p, v),
-    estaEscuro: () => escuro,
+    estaEscuro: () => sim.sensor('luz') < 40,
     botoes: sim.botoes,
+    sensor: k => sim.sensor(k),
+    pixel: (x, y, on) => sim.pixel(x, y, on),
+    grafico: (v, m) => sim.grafico(v, m),
+    mostrarTexto: (t, n) => sim.mostrarTexto(t, n),
+    servo: (p, a) => sim.servo(p, a),
+    registar: (n, v) => sim.registar(n, v),
   };
+
+  // ------------------------------------------------------------ controlos dos sensores e variáveis no ecrã
+  // Só aparecem os controlos de que o desafio precisa (pelos blocos da caixa e do programa).
+  const CONTROLOS = {
+    mk_luz: ['luz'], mk_escuro: ['luz'], mk_som_nivel: ['som', 'palmas'], mk_som_alto: ['palmas', 'som'],
+    mk_temperatura: ['temperatura'], mk_ler_analogico: ['analogico:P1'], mk_ler_digital: ['digital:P0'],
+  };
+  function atualizarControlos() {
+    const d = F.DESAFIOS[estado.atual];
+    const lista = new Set(d.sim || []);
+    const tipos = new Set();
+    for (let i = 0; i <= estado.atual; i++) for (const k of F.DESAFIOS[i].novos) tipos.add((F.XML_CAIXA[k] || '').match(/type="([a-z_]+)"/)?.[1]);
+    ws.getAllBlocks(false).forEach(b => {
+      tipos.add(b.type);
+      if (b.type === 'mk_gesto') lista.add('gesto:' + b.getFieldValue('G'));
+      if (b.type === 'mk_ler_analogico') lista.add('analogico:' + b.getFieldValue('P'));
+      if (b.type === 'mk_ler_digital') lista.add('digital:' + b.getFieldValue('P'));
+    });
+    for (const t of tipos) (CONTROLOS[t] || []).forEach(c => lista.add(c));
+    if (tipos.has('mk_gesto') && ![...lista].some(c => c.startsWith('gesto:'))) ['gesto:left', 'gesto:right'].forEach(c => lista.add(c));
+    sim.controlos([...lista]);
+  }
+  const caixaVars = document.createElement('div');
+  caixaVars.className = 'sim-vars'; caixaVars.setAttribute('aria-live', 'polite');
+  $('sim').appendChild(caixaVars);
 
   // ------------------------------------------------------------ micro:bit verdadeiro
   const ble = new F.MicrobitBLE(k => entrada(k, 'microbit'), (e, nome) => {
@@ -90,6 +121,11 @@
   const motor = new F.Motor(ws, [noEcra, ble], (dir, v) => {
     const t = performance.now();
     registo.push({ t, dir, v });
+  motor.mudouVars = vars => {
+    const k = Object.keys(vars);
+    caixaVars.hidden = k.length === 0;
+    caixaVars.innerHTML = k.map(n => `<span><b>${n}</b> ${Math.round(vars[n] * 100) / 100}</span>`).join('');
+  };
     registo = registo.filter(e => t - e.t < 30000);
     verificar();
   });
@@ -132,6 +168,7 @@
       if (!gambiarra) { estado.xml = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(ws)); gravar(); }
       reiniciar();
       analisar();
+      atualizarControlos();
     }, 250);
   });
 
@@ -190,6 +227,7 @@
     for (const p of d.passos) { const li = document.createElement('li'); li.textContent = p; $('missaoPassos').appendChild(li); }
     $('missaoMaterial').textContent = d.material;
     $('btnLuz').hidden = !d.livre;
+    atualizarControlos();
     if (ble.ligado) ble.enviar('W' + (d.livre ? 1 : 0));
     ws.updateToolbox(F.caixa(n));
     desenharCaminho();
@@ -256,6 +294,8 @@
   $('btnAB').addEventListener('click', () => { F.audio(); entrada('botao:AB', 'ecra'); });
   $('btnLuz').addEventListener('click', e => {
     escuro = !escuro;
+    sim.definirSensor('luz', escuro ? 10 : 150);
+    entrada('luz:' + (escuro ? 10 : 150), 'ecra');
     e.currentTarget.setAttribute('aria-pressed', String(escuro));
     e.currentTarget.textContent = escuro ? 'Acender a luz' : 'Apagar a luz';
     document.querySelector('.sim-placa').style.filter = escuro ? 'brightness(0.55)' : '';

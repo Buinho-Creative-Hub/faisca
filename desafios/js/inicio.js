@@ -7,12 +7,8 @@
   const $ = id => document.getElementById(id);
 
   // Missões pensadas mas ainda sem conteúdo validado — aparecem como «em preparação».
-  const EM_PREPARACAO = [
-    { titulo: 'Toy hacking', tema: 'Gambiarra e brinquedos', descricao: 'Abre um brinquedo, percebe como funciona e reinventa-o com o micro:bit.', cor: '#d400d4' },
-    { titulo: 'Citizen sensing', tema: 'Medir o lugar', descricao: 'Mede o som, a luz e a temperatura da escola e faz um mapa sensorial.', cor: '#00a4a6' },
-    { titulo: 'Matemática', tema: 'Contar, medir, padrões', descricao: 'Contadores, dados, padrões de luz e jogos de números.', cor: '#7600a8' },
-    { titulo: 'Natureza', tema: 'Biodiversidade em Messejana', descricao: 'Guarda da horta, ninhos e bichos: observar e investigar à volta da escola.', cor: '#2e8b57' },
-  ];
+  // Ideias de missões ainda sem conteúdo aparecem aqui como «em preparação» ({ titulo, tema, descricao, cor }).
+  const EM_PREPARACAO = [];
 
   F.chaveMissao = m => m.chave || ('faisca.missao.' + m.id + '.v1');
   F.progressoMissao = m => {

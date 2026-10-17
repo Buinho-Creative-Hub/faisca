@@ -21,6 +21,40 @@
     mk_icone_pequeno: '<block type="mk_icone"><field name="I">SmallHeart</field></block>',
     mk_icone_triste: '<block type="mk_icone"><field name="I">Sad</field></block>',
     mk_icone_sim: '<block type="mk_icone"><field name="I">Yes</field></block>',
+    mk_icone_nao: '<block type="mk_icone"><field name="I">No</field></block>',
+    mk_icone_surpreendido: '<block type="mk_icone"><field name="I">Surprised</field></block>',
+    mk_icone_dormir: '<block type="mk_icone"><field name="I">Asleep</field></block>',
+    mk_iniciar: '<block type="mk_iniciar"></block>',
+    mk_gesto: '<block type="mk_gesto"><field name="G">left</field></block>',
+    mk_gesto_direita: '<block type="mk_gesto"><field name="G">right</field></block>',
+    mk_gesto_baixo: '<block type="mk_gesto"><field name="G">face down</field></block>',
+    mk_gesto_queda: '<block type="mk_gesto"><field name="G">freefall</field></block>',
+    mk_som_alto: '<block type="mk_som_alto"></block>',
+    mk_luz: '<block type="mk_luz"></block>',
+    mk_som_nivel: '<block type="mk_som_nivel"></block>',
+    mk_temperatura: '<block type="mk_temperatura"></block>',
+    mk_tempo: '<block type="mk_tempo"></block>',
+    mk_mostrar_numero: '<block type="mk_mostrar_numero"><value name="N"><shadow type="mk_num"><field name="NUM">0</field></shadow></value></block>',
+    mk_mostrar_texto: '<block type="mk_mostrar_texto"><value name="T"><shadow type="mk_texto"><field name="TXT">Olá!</field></shadow></value></block>',
+    mk_acender: '<block type="mk_acender"><value name="X"><shadow type="mk_num"><field name="NUM">2</field></shadow></value><value name="Y"><shadow type="mk_num"><field name="NUM">2</field></shadow></value></block>',
+    mk_apagar_led: '<block type="mk_apagar_led"><value name="X"><shadow type="mk_num"><field name="NUM">2</field></shadow></value><value name="Y"><shadow type="mk_num"><field name="NUM">2</field></shadow></value></block>',
+    mk_grafico: '<block type="mk_grafico"><value name="V"><shadow type="mk_num"><field name="NUM">0</field></shadow></value><value name="MAX"><shadow type="mk_num"><field name="NUM">255</field></shadow></value></block>',
+    mk_var_definir: '<block type="mk_var_definir"><field name="VAR">contador</field><value name="V"><shadow type="mk_num"><field name="NUM">0</field></shadow></value></block>',
+    mk_var_mudar: '<block type="mk_var_mudar"><field name="VAR">contador</field><value name="V"><shadow type="mk_num"><field name="NUM">1</field></shadow></value></block>',
+    mk_var: '<block type="mk_var"><field name="VAR">contador</field></block>',
+    mk_conta: '<block type="mk_conta"><field name="OP">+</field><value name="A"><shadow type="mk_num"><field name="NUM">0</field></shadow></value><value name="B"><shadow type="mk_num"><field name="NUM">0</field></shadow></value></block>',
+    mk_aleatorio: '<block type="mk_aleatorio"><value name="A"><shadow type="mk_num"><field name="NUM">1</field></shadow></value><value name="B"><shadow type="mk_num"><field name="NUM">6</field></shadow></value></block>',
+    mk_resto: '<block type="mk_resto"><value name="A"><shadow type="mk_num"><field name="NUM">0</field></shadow></value><value name="B"><shadow type="mk_num"><field name="NUM">2</field></shadow></value></block>',
+    mk_comparar: '<block type="mk_comparar"><field name="OP">&lt;</field><value name="A"><shadow type="mk_num"><field name="NUM">0</field></shadow></value><value name="B"><shadow type="mk_num"><field name="NUM">0</field></shadow></value></block>',
+    mk_se_entao: '<block type="mk_se_entao"></block>',
+    mk_se_senao: '<block type="mk_se"></block>',
+    mk_ler_digital: '<block type="mk_ler_digital"><field name="P">P0</field></block>',
+    mk_ler_analogico: '<block type="mk_ler_analogico"><field name="P">P1</field></block>',
+    mk_servo: '<block type="mk_servo"><field name="P">P0</field><value name="A"><shadow type="mk_num"><field name="NUM">90</field></shadow></value></block>',
+    mk_registar: '<block type="mk_registar"><value name="NOME"><shadow type="mk_texto"><field name="TXT">luz</field></shadow></value><value name="V"><shadow type="mk_num"><field name="NUM">0</field></shadow></value></block>',
+    mk_tom_livre: '<block type="mk_tom"><value name="F"><shadow type="mk_num"><field name="NUM">440</field></shadow></value><value name="BAT"><shadow type="mk_batida_menu"><field name="V">0.25</field></shadow></value></block>',
+    mk_digital_p0_1: '<block type="mk_digital"><value name="P"><shadow type="mk_pino_menu"><field name="V">P0</field></shadow></value><value name="V"><shadow type="mk_num"><field name="NUM">1</field></shadow></value></block>',
+    mk_digital_p0_0: '<block type="mk_digital"><value name="P"><shadow type="mk_pino_menu"><field name="V">P0</field></shadow></value><value name="V"><shadow type="mk_num"><field name="NUM">0</field></shadow></value></block>',
     mk_limpar: '<block type="mk_limpar"></block>',
     mk_pausa: '<block type="mk_pausa"><value name="MS"><shadow type="mk_pausa_menu"><field name="V">200</field></shadow></value></block>',
     mk_repetir: '<block type="mk_repetir"><value name="N"><shadow type="mk_num"><field name="NUM">4</field></shadow></value></block>',
@@ -100,7 +134,16 @@
   }
 
   F.caixa = caixa;
-  F.verif = { depois, conta, visiveis, algumPino, causou };
+  // houve(reg, 'numero:') — alguma saída começa por / corresponde a (texto ou RegExp)?
+  const houve = (reg, t) => reg.some(e => e.dir === 'out' && (t instanceof RegExp ? t.test(e.v) : e.v.startsWith(t)));
+  // números mostrados no ecrã, por ordem
+  const numeros = reg => reg.filter(e => e.dir === 'out' && e.v.startsWith('numero:')).map(e => Number(e.v.slice(7)));
+  // valor numérico de uma entrada de sensor ('luz:30' → 30)
+  const valorDe = v => Number(String(v).split(':').pop());
+  // depois de o sensor passar a um valor que cumpre cond(v), as saídas (até à entrada seguinte) cumprem teste?
+  //   aposSensor(r, 'luz', v => v < 40, s => s.includes('icone:Asleep'))
+  const aposSensor = (reg, sensor, cond, teste) => causou(reg, teste, x => x.startsWith(sensor + ':') && cond(valorDe(x)));
+  F.verif = { depois, conta, visiveis, algumPino, causou, houve, numeros, valorDe, aposSensor };
 
   // ---------------------------------------------------- mascotes e missões
   // MASCOTE = quem acompanha (nome, género, ilustrações, voz, tema, sons).
