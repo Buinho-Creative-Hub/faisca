@@ -4,6 +4,8 @@ Editor de blocos do Buinho para quem nunca programou (10+ anos). Os blocos têm 
 
 Funciona **sem internet e sem instalar nada**: é só abrir o `index.html` no Chrome ou no Edge (no Windows, duplo clique em `Abrir Faisca.bat`).
 
+> **Como está feita e como fazer outra versão:** [PLATAFORMA-GABI.md](PLATAFORMA-GABI.md)
+
 ## Os desafios
 
 | # | Desafio | O que tem de acontecer | Blocos novos | Material |
