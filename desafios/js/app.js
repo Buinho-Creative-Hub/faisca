@@ -92,7 +92,7 @@
     const d = F.DESAFIOS[estado.atual];
     const lista = new Set(d.sim || []);
     const tipos = new Set();
-    for (let i = 0; i <= estado.atual; i++) for (const k of F.DESAFIOS[i].novos) tipos.add((F.XML_CAIXA[k] || '').match(/type="([a-z_]+)"/)?.[1]);
+    for (const m of F.caixa(estado.atual).matchAll(/<block type="([a-z_]+)"/g)) tipos.add(m[1]);   // blocos que estão na caixa
     ws.getAllBlocks(false).forEach(b => {
       tipos.add(b.type);
       if (b.type === 'mk_gesto') lista.add('gesto:' + b.getFieldValue('G'));

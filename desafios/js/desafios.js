@@ -121,7 +121,9 @@
   function caixa(n) {
     const DESAFIOS = F.DESAFIOS;
     const tipos = [];
-    for (let i = 0; i <= n; i++) for (const k of DESAFIOS[i].novos) if (!tipos.includes(k)) tipos.push(k);
+    // por defeito a caixa é cumulativa; um desafio pode fixar a caixa toda com «caixa: [...]» (para não crescer demais)
+    if (DESAFIOS[n].caixa) for (const k of [...DESAFIOS[n].novos, ...DESAFIOS[n].caixa]) { if (!tipos.includes(k)) tipos.push(k); }
+    else for (let i = 0; i <= n; i++) for (const k of DESAFIOS[i].novos) if (!tipos.includes(k)) tipos.push(k);
     const novos = new Set(DESAFIOS[n].novos);
     // os novos primeiro, com um separador maior, para se verem logo
     const ordem = [...tipos.filter(t => novos.has(t)), ...tipos.filter(t => !novos.has(t))];
