@@ -40,6 +40,10 @@
     ciclos:   '#00aa00',
     logica:   '#00a4a6',
     pinos:    '#b22222',
+    led:      '#5c2d91',
+    variaveis:'#dc143c',
+    matematica:'#9400d3',
+    registo:  '#378273',
   };
   const blockStyles = {};
   for (const [nome, cor] of Object.entries(GAVETAS)) {
@@ -99,8 +103,56 @@
   // ------------------------------------------------------------------ blocos
   const num = (nome) => ({ type: 'input_value', name: nome, check: 'Number' });
   const menu = (nome) => ({ type: 'input_value', name: nome });
-  const PAUSAS = [['100', '100'], ['200', '200'], ['300', '300'], ['500', '500'], ['1000', '1000'], ['2000', '2000']];
+  const PAUSAS = [['100', '100'], ['200', '200'], ['300', '300'], ['500', '500'], ['1000', '1000'], ['2000', '2000'], ['3000', '3000'], ['5000', '5000']];
   const BATIDAS = [['1', '1'], ['1/2', '0.5'], ['1/4', '0.25'], ['2', '2'], ['4', '4']];
+  // Gestos (como o «em agitar» do MakeCode, com o menu aberto)
+  const GESTOS = [['inclinado para a esquerda', 'left'], ['inclinado para a direita', 'right'], ['logotipo para cima', 'up'],
+    ['logotipo para baixo', 'down'], ['ecrã para cima', 'face up'], ['ecrã para baixo', 'face down'], ['queda livre', 'freefall']];
+  // Variáveis: um conjunto fixo e simples (sem janelas para criar variáveis)
+  const VARIAVEIS = [['contador', 'contador'], ['pontos', 'pontos'], ['medida', 'medida'], ['recorde', 'recorde'], ['vidas', 'vidas'], ['passos', 'passos']];
+  const PINOS_LER = [['P0', 'P0'], ['P1', 'P1'], ['P2', 'P2']];
+  const stmt = { previousStatement: null, nextStatement: null };
+  const F_BLOCOS_NOVOS = [
+    // ---- eventos
+    { type: 'mk_iniciar', message0: 'no arranque', message1: '%1', args1: [{ type: 'input_statement', name: 'DO' }], style: 'basico', tooltip: 'Corre uma vez, quando o micro:bit liga.' },
+    { type: 'mk_gesto', message0: 'em %1', args0: [{ type: 'field_dropdown', name: 'G', options: GESTOS }],
+      message1: '%1', args1: [{ type: 'input_statement', name: 'DO' }], style: 'entrada', tooltip: 'Corre quando o micro:bit faz este movimento.' },
+    { type: 'mk_som_alto', message0: 'em som alto', message1: '%1', args1: [{ type: 'input_statement', name: 'DO' }], style: 'entrada', tooltip: 'Corre quando o microfone ouve um barulho forte (micro:bit V2).' },
+    // ---- sensores (valores)
+    { type: 'mk_luz', message0: 'nível de luz', output: 'Number', style: 'entrada', tooltip: 'De 0 (escuro) a 255 (muita luz).' },
+    { type: 'mk_som_nivel', message0: 'nível de som', output: 'Number', style: 'entrada', tooltip: 'De 0 (silêncio) a 255 (muito barulho). micro:bit V2.' },
+    { type: 'mk_temperatura', message0: 'temperatura (°C)', output: 'Number', style: 'entrada', tooltip: 'Temperatura perto do processador do micro:bit.' },
+    { type: 'mk_tempo', message0: 'tempo de execução (ms)', output: 'Number', style: 'entrada', tooltip: 'Milissegundos desde que o programa começou.' },
+    // ---- básico
+    { type: 'mk_mostrar_numero', message0: 'mostrar número %1', args0: [num('N')], inputsInline: true, ...stmt, style: 'basico', tooltip: 'Mostra um número no ecrã de luzes.' },
+    { type: 'mk_mostrar_texto', message0: 'mostrar texto %1', args0: [menu('T')], inputsInline: true, ...stmt, style: 'basico', tooltip: 'Faz passar um texto no ecrã de luzes.' },
+    // ---- LED
+    { type: 'mk_acender', message0: 'acender x %1 y %2', args0: [num('X'), num('Y')], inputsInline: true, ...stmt, style: 'led', tooltip: 'Acende uma luz. x: coluna (0–4), y: linha (0–4).' },
+    { type: 'mk_apagar_led', message0: 'apagar x %1 y %2', args0: [num('X'), num('Y')], inputsInline: true, ...stmt, style: 'led', tooltip: 'Apaga uma luz.' },
+    { type: 'mk_grafico', message0: 'desenhar gráfico de barras de %1 até %2', args0: [num('V'), num('MAX')], inputsInline: true, ...stmt, style: 'led', tooltip: 'Quanto maior o valor, mais luzes se acendem.' },
+    // ---- variáveis
+    { type: 'mk_var_definir', message0: 'definir %1 para %2', args0: [{ type: 'field_dropdown', name: 'VAR', options: VARIAVEIS }, num('V')], inputsInline: true, ...stmt, style: 'variaveis', tooltip: 'Guarda um valor na variável.' },
+    { type: 'mk_var_mudar', message0: 'mudar %1 em %2', args0: [{ type: 'field_dropdown', name: 'VAR', options: VARIAVEIS }, num('V')], inputsInline: true, ...stmt, style: 'variaveis', tooltip: 'Soma este valor à variável (usa -1 para tirar).' },
+    { type: 'mk_var', message0: '%1', args0: [{ type: 'field_dropdown', name: 'VAR', options: VARIAVEIS }], output: 'Number', style: 'variaveis', tooltip: 'O valor guardado na variável.' },
+    // ---- matemática
+    { type: 'mk_conta', message0: '%1 %2 %3', args0: [num('A'), { type: 'field_dropdown', name: 'OP', options: [['+', '+'], ['−', '-'], ['×', '*'], ['÷', '/']] }, num('B')],
+      inputsInline: true, output: 'Number', style: 'matematica', tooltip: 'Faz uma conta.' },
+    { type: 'mk_aleatorio', message0: 'escolher ao acaso de %1 até %2', args0: [num('A'), num('B')], inputsInline: true, output: 'Number', style: 'matematica', tooltip: 'Um número inteiro ao acaso entre os dois (incluídos).' },
+    { type: 'mk_resto', message0: 'resto de %1 ÷ %2', args0: [num('A'), num('B')], inputsInline: true, output: 'Number', style: 'matematica', tooltip: 'O que sobra da divisão.' },
+    // ---- lógica
+    { type: 'mk_comparar', message0: '%1 %2 %3', args0: [num('A'), { type: 'field_dropdown', name: 'OP', options: [['<', '<'], ['>', '>'], ['=', '=='], ['≤', '<='], ['≥', '>='], ['≠', '!=']] }, num('B')],
+      inputsInline: true, output: 'Boolean', style: 'logica', tooltip: 'Compara dois números.' },
+    { type: 'mk_se_entao', message0: 'se %1 então', args0: [{ type: 'input_value', name: 'C', check: 'Boolean' }],
+      message1: '%1', args1: [{ type: 'input_statement', name: 'SIM' }], ...stmt, style: 'logica', tooltip: 'Só faz o que está dentro se a condição for verdadeira.' },
+    // ---- pinos
+    { type: 'mk_ler_digital', message0: 'leitura digital pin %1', args0: [{ type: 'field_dropdown', name: 'P', options: PINOS_LER }], output: 'Number', style: 'pinos', tooltip: '1 se o circuito estiver fechado, 0 se estiver aberto.' },
+    { type: 'mk_ler_analogico', message0: 'leitura analógica pin %1', args0: [{ type: 'field_dropdown', name: 'P', options: PINOS_LER }], output: 'Number', style: 'pinos', tooltip: 'De 0 a 1023: quanto passa de eletricidade.' },
+    { type: 'mk_servo', message0: 'escrever servo pin %1 para %2', args0: [{ type: 'field_dropdown', name: 'P', options: [['P0', 'P0'], ['P1', 'P1'], ['P2', 'P2']] }, num('A')], inputsInline: true, ...stmt, style: 'pinos', tooltip: 'Roda o servomotor para este ângulo (0 a 180 graus).' },
+    // ---- registo de dados (micro:bit V2)
+    { type: 'mk_registar', message0: 'registar dados %1 = %2', args0: [menu('NOME'), num('V')], inputsInline: true, ...stmt, style: 'registo', tooltip: 'Guarda uma linha na tabela de dados do micro:bit (abre o MY_DATA.HTM).' },
+    // ---- sombras
+    { type: 'mk_texto', message0: '%1', args0: [{ type: 'field_input', name: 'TXT', text: 'Olá!' }], output: 'String', style: 'valor' },
+  ];
 
   Blockly.defineBlocksWithJsonArray([
     // Eventos (gaveta Entrada)
@@ -145,8 +197,9 @@
     { type: 'mk_batida_menu', message0: '%1', args0: [{ type: 'field_dropdown', name: 'V', options: BATIDAS }], output: 'Number', style: 'musica' },
     { type: 'mk_som_menu', message0: '%1', args0: [{ type: 'field_dropdown', name: 'V', options: SONS }], output: null, style: 'musica' },
     { type: 'mk_pino_menu', message0: '%1', args0: [{ type: 'field_dropdown', name: 'V', options: [['P2', 'P2'], ['P0', 'P0'], ['P1', 'P1']] }], output: null, style: 'pinos' },
+    ...F_BLOCOS_NOVOS,
   ]);
 
   window.Faisca = window.Faisca || {};
-  Object.assign(window.Faisca, { ICONES, NOMES_ICONES, SONS, NOTAS, GAVETAS, iconeSvg });
+  Object.assign(window.Faisca, { ICONES, NOMES_ICONES, SONS, NOTAS, GAVETAS, GESTOS, VARIAVEIS, iconeSvg });
 })();

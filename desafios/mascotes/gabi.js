@@ -16,7 +16,7 @@
     sprites: {
       boas_vindas: '01_boas_vindas', curiosa: '02_curiosa', a_pensar: '03_a_pensar', surpreendida: '04_surpreendida',
       dica: '05_a_dar_uma_dica', celebrar: '06_a_celebrar', incentivar: '07_a_incentivar', calma: '08_calma',
-      testar: '02_curiosa',
+      testar: '02_curiosa', inventar: '07_a_incentivar',
     },
     marca: {
       nome: 'Faísca',

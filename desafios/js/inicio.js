@@ -7,12 +7,8 @@
   const $ = id => document.getElementById(id);
 
   // Missões pensadas mas ainda sem conteúdo validado — aparecem como «em preparação».
-  const EM_PREPARACAO = [
-    { titulo: 'Toy hacking', tema: 'Gambiarra e brinquedos', descricao: 'Abre um brinquedo, percebe como funciona e reinventa-o com o micro:bit.', cor: '#d400d4' },
-    { titulo: 'Citizen sensing', tema: 'Medir o lugar', descricao: 'Mede o som, a luz e a temperatura da escola e faz um mapa sensorial.', cor: '#00a4a6' },
-    { titulo: 'Matemática', tema: 'Contar, medir, padrões', descricao: 'Contadores, dados, padrões de luz e jogos de números.', cor: '#7600a8' },
-    { titulo: 'Natureza', tema: 'Biodiversidade em Messejana', descricao: 'Guarda da horta, ninhos e bichos: observar e investigar à volta da escola.', cor: '#2e8b57' },
-  ];
+  // Ideias de missões ainda sem conteúdo aparecem aqui como «em preparação» ({ titulo, tema, descricao, cor }).
+  const EM_PREPARACAO = [];
 
   F.chaveMissao = m => m.chave || ('faisca.missao.' + m.id + '.v1');
   F.progressoMissao = m => {
@@ -74,7 +70,8 @@
     F.ORDEM_MISSOES.forEach(id => {
       const X = F.MISSOES[id];
       const total = F.desafiosDe(X).filter(d => !d.livre).length;
-      const feitos = Math.min(F.progressoMissao(X), total);
+      const todos = F.desafiosDe(X), fp = F.progressoMissao(X);
+      const feitos = todos.slice(0, fp).filter(d => !d.livre).length;   // o projeto livre não conta
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'cartao-missao';
       b.style.setProperty('--cor', X.cor || 'var(--azul)');
@@ -83,7 +80,7 @@
       b.querySelector('.cx-tema').textContent = X.tema;
       b.querySelector('strong').textContent = X.titulo;
       b.querySelector('.cx-desc').textContent = X.descricao;
-      b.querySelector('.cx-niveis').textContent = X.niveis.filter(n => !/livre/i.test(n.nome)).length + ' níveis · ' + total + ' desafios';
+      b.querySelector('.cx-niveis').textContent = X.niveis.length + ' níveis · ' + total + ' desafios + ' + X.niveis.length + ' projetos livres';
       b.querySelector('.cx-barra span').style.width = (total ? 100 * feitos / total : 0) + '%';
       b.querySelector('.cx-feito').textContent = feitos === 0 ? 'Começar' : feitos >= total ? 'Feita! Voltar' : `Continuar · ${feitos} de ${total}`;
       b.addEventListener('click', () => abrir(id));

@@ -239,3 +239,47 @@ e da lanterna caso a caso, e o ecrã inicial.
 **Por fazer:** conteúdo das missões em preparação (validar com os materiais do Buinho Educativo); desafios de bancada
 (sem micro:bit a validar) como tipo novo; animação discreta do Nico por camadas (Fase 3); teste com crianças e com
 micro:bit verdadeiro (detetive e lanterna).
+
+## 8. Blocos e sensores (desde 17 Out 2026, noite)
+
+Para as missões Toy hacking, Citizen sensing, Matemática, Natureza e o alargamento de Reparar, o motor passou a ter
+(sempre com o aspecto e as cores das gavetas do MakeCode, e traduzidos para MicroPython V2 2.1.2):
+
+| Gaveta | Blocos | Registo (o que a validação lê) |
+|---|---|---|
+| Básico | `no arranque`, `mostrar número`, `mostrar texto` | `numero:N`, `texto:T` |
+| Entrada | `em inclinado…/ecrã para baixo/queda livre` (gestos), `em som alto`, `nível de luz`, `nível de som`, `temperatura (°C)`, `tempo de execução (ms)` | entradas `gesto:left`, `somalto`, `luz:V`, `som:V`, `temperatura:V` |
+| LED | `acender x y`, `apagar x y`, `desenhar gráfico de barras` | `acender:x,y`, `apagar:x,y`, `grafico:0–25` |
+| Variáveis | `definir … para`, `mudar … em`, valor (contador, pontos, medida, recorde, vidas, passos) | `var:nome:valor` |
+| Matemática | conta (+ − × ÷), `escolher ao acaso`, `resto de … ÷ …` | — |
+| Lógica | comparar (< > = ≤ ≥ ≠), `se … então` (sem senão) | — |
+| Pinos | `leitura digital pin`, `leitura analógica pin`, `escrever servo pin … para …` | entradas `digital:P0:1`, `analogico:P1:V`; saída `servo:P0:90` |
+| Registo de dados | `registar dados nome = valor` (MicroPython `log`, abre-se no MY_DATA.HTM) | `registo:nome:valor` |
+
+- **Micro:bit do ecrã:** letra 5×5 própria (texto e números a passar), gráfico, LEDs individuais, servo desenhado,
+  tabela dos dados registados e as variáveis em pastilhas. Por baixo, **controlos dos sensores** (luz, som + «bater
+  palmas», temperatura, pinos analógicos/digitais, gestos) — só aparecem os que a caixa e o programa usam.
+- **Registo:** desenhos repetidos por um «para sempre» não se repetem no registo (mas contam sempre depois de uma entrada).
+- **Verificação:** `F.verif` ganhou `houve`, `numeros`, `valorDe`, `aposSensor(reg, 'luz', v => v < 40, teste)`.
+- **Pistas em série:** `js/pistas.js` — `P.evento`, `P.bloco`, `P.valorEm`, `P.regra` (nível 1 escrito à mão; 2 e 3
+  saem do nome e da cor do bloco).
+- **Caixa:** cumulativa por defeito; um desafio pode fixá-la com `caixa: [...]` para não crescer demais.
+- **Testes:** um ficheiro de casos por missão em `testes/casos/`; `testes/testar.js` valida também que o MicroPython
+  gerado é válido; `testes/blocos-novos.js` testa cada bloco novo no ecrã e em Python.
+
+## 9. Estrutura das missões: 3 níveis × 12 (desde 17 Out 2026, noite — pedido do Carlos)
+
+- **Cada nível tem 12 atividades:** 1–6 curtas (aquecer, 5–10 min) · **7–11 projetos complexos de 15–20 min**
+  (várias partes, construção física, condição/variável a acertar; a validação só passa com o projeto todo a funcionar) ·
+  **12 = projeto livre**, gerado pelo motor (`criarLivres` em `js/desafios.js`).
+- **Blocos do projeto livre crescem:** nível 1 → os blocos do nível 1; nível 2 → os dos níveis 1 e 2; último nível →
+  **todos os blocos da plataforma** (`F.TODOS_BLOCOS`), numa coluna com secções por gaveta (Básico, Entrada, Música…).
+  Textos opcionais por nível em `missao.livres`.
+- **Desbloqueio:** acabar o 11.º abre ao mesmo tempo o projeto livre e o nível seguinte (o livre nunca bloqueia).
+- **Topo:** separadores «Nível 1 · 2 · 3» e só os 12 passos do nível actual; festa própria ao acabar um nível/missão.
+- **Missões (6 × 33 guiadas + 3 livres):** Primeiros passos (os 6 testados no início dos níveis 1 e 2) · Reparar ·
+  Toy hacking · Citizen sensing · Matemática · Natureza.
+- **Testes:** um caso por atividade guiada (198), cada um com a solução, a gambiarra e outro programa errado, regras
+  caso a caso, «parece pronto», Python válido, .hex e voz — 6 missões × 2 mascotes.
+- **Para saber:** um texto longo a passar no ecrã bloqueia o botão até acabar (como no micro:bit); as validações
+  de sensores só olham para as saídas até à entrada seguinte.
