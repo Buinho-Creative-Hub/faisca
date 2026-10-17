@@ -1,5 +1,11 @@
 # Plataforma Gabi — como está feita e como fazer outra versão
 
+> **Actualização 17 Out 2026 (tarde) — motor + pacotes.** A plataforma deixou de ter a Gabi escrita no código.
+> Mascote, marca, mensagens e desafios vivem num **pacote** (`pacotes/<id>.js`); o resto é motor comum.
+> Há dois pacotes: **`gabi`** (o original, conteúdo igual) e **`nico`** (Nico, o Podengo do Buinho Educativo).
+> `index.html` abre a Gabi; `index.html?p=nico` (ou `nico.html` / `Abrir Nico.bat`) abre o Nico.
+> A receita da secção 6 passa a ser: **criar um pacote**, não copiar a pasta. Ver § 7.
+
 > Documento de referência da **Faísca Desafios com a Gabi** (repo `faisca`, pasta `desafios/`).
 > Serve para manter esta versão e para criar versões novas — por exemplo a versão do Buinho no Alentejo —
 > sem recomeçar do zero. Escrito a 17 Out 2026, depois de testada com micro:bit V2 verdadeiro.
@@ -35,18 +41,20 @@ elas, e no fim **gravam o programa no micro:bit verdadeiro por cabo USB** — tu
 | `js/blocks.js` | **renderer `makecode`** (geometria medida no pxt), tema com as cores das categorias, definição dos blocos, listas de ícones/sons/notas | só para blocos novos |
 | `js/sim.js` | micro:bit desenhado: LEDs, botões, logotipo, pinos, som (WebAudio), luz | raramente |
 | `js/motor.js` | corre o programa de blocos no ecrã (acontecimentos, gerações, destaque do bloco a correr) e escreve o **registo** | só para blocos novos |
-| `js/desafios.js` | **lista dos desafios**: título, missão, passos, material, blocos novos, verificação `ok(registo)` | **sim — é o conteúdo** |
-| `js/gabi-analise.js` | lê o espaço de blocos e devolve uma estrutura simples (eventos, sequências, blocos soltos) | não |
-| `js/gabi-regras.js` | **o que a mascote diz**: boas-vindas, regras de dificuldade com 3 pistas, sucesso, extensão, gambiarra | **sim — é o conteúdo** |
-| `js/gabi-motor.js` | decide *quando* falar (inactividade, teste falhado, calma, correcção, «agora experimenta») | não (afinar tempos) |
-| `js/gabi-ui.js` | mostra a mensagem: sprite certo, balão, bolinhas do nível, recolher/abrir | só os nomes dos sprites |
+| `pacotes/<id>.js` | **o pacote**: marca, mascote (nome, artigo, sprites), mensagens gerais e a lista de desafios, cada um com o seu `tutor` (regras, pistas, sucesso, gambiarra) | **sim — é o conteúdo** |
+| `js/pacote.js` | escolhe o pacote pelo `?p=` (lista `PACOTES`) | só para registar um pacote novo |
+| `js/desafios.js` | base: blocos da caixa (`XML_CAIXA`), verificações (`depois`, `visiveis`, `algumPino`, `causou`), `caixa(n)`, `registarPacote` | só para blocos novos |
+| `js/tutor-analise.js` | lê o espaço de blocos e devolve uma estrutura simples (eventos, sequências, blocos soltos); ajudas `icones/tem/soltoCom` | não |
+| `js/tutor-motor.js` | decide *quando* falar (inactividade, teste falhado, calma, correcção, «agora experimenta») | não (afinar tempos) |
+| `js/tutor-ui.js` | mostra a mensagem: sprite do pacote, balão, bolinhas do nível, recolher/abrir | não |
 | `js/hex.js` | **blocos → MicroPython → .hex** (envio por USB) | só para blocos novos |
 | `js/ble.js` | Bluetooth opcional (precisa do programa companheiro no micro:bit) | não |
 | `js/app.js` | cola tudo: estado guardado no browser, caminho de desafios, festa, modo gambiarra, botão Enviar | pouco |
-| `img/gabi/01…08.png` | os 8 estados da mascote | **sim — nova mascote** |
+| `img/<id>/01…08.png` | os estados da mascote | **sim — nova mascote** |
 | `vendor/` | Blockly 12.5.1, tradução PT, `microbit-fs.js`, `micropython-v2.js` (firmware) | não |
 | `Abrir Faisca.bat` | abre no Chrome/Edge a partir da pasta | não |
-| `gabi-demo.html` | montra dos 8 estados (para validar ilustrações) | sprites |
+| `estados.html?p=<id>` | montra dos estados, com exemplos tirados do pacote (para validar ilustrações) | não |
+| `testes/testar.js` | testes automáticos de todos os pacotes (headless) | acrescentar os casos do pacote |
 | `TESTES-GABI.md` | 13 cenários de teste da mascote | acrescentar os novos |
 
 ## 4. Como funciona por dentro
@@ -54,7 +62,7 @@ elas, e no fim **gravam o programa no micro:bit verdadeiro por cabo USB** — tu
 ```
  criança arrasta blocos ─► Blockly (renderer makecode)
                              │  change (250 ms)
-                             ├─► gabi-analise ─► gabi-motor ─► gabi-ui  (a mascote fala)
+                             ├─► tutor-analise ─► tutor-motor ─► tutor-ui  (a mascote fala)
                              └─► motor.arrancar()
  botões do ecrã / micro:bit ─► motor.acontecimento('agitar'|'logo'|'botao:A'…)
                              └─► executa blocos ─► sim (+ micro:bit por BT) ─► REGISTO
@@ -96,10 +104,10 @@ Ajudas prontas: `depois(registo, entrada, teste)` — houve esta saída até 8 s
 ```
 
 ### 4.4 A mascote — motor pedagógico
-**Análise** (`gabi-analise.js`): transforma os blocos em `{eventos:[{chave, seq, plano}], soltos}` com ajudas
+**Análise** (`tutor-analise.js`): transforma os blocos em `{eventos:[{chave, seq, plano}], soltos}` com ajudas
 `evento('agitar')`, `eventosDe('pino:')`, `existe(tipo)`, `vazio()` e uma `assinatura` (muda quando o programa muda).
 
-**Regras** (`gabi-regras.js`), por desafio:
+**Regras** (no pacote, em `tutor` de cada desafio — antes `gabi-regras.js`):
 ```js
 { boasVindas: ['boas_vindas', 'Olá! …'],
   parecePronto: a => …,               // o programa parece certo → «agora experimenta»
@@ -117,7 +125,7 @@ Ajudas prontas: `depois(registo, entrada, teste)` — houve esta saída até 8 s
 Mais as **regras comuns** (ex.: blocos soltos) e as **mensagens gerais** (convite, calma, vazio, teste falhado,
 obrigada pela gambiarra).
 
-**Quando fala** (`gabi-motor.js`):
+**Quando fala** (`tutor-motor.js`):
 
 | Situação | O que faz | Tempo |
 |---|---|---|
@@ -133,7 +141,7 @@ obrigada pela gambiarra).
 
 Mensagens que a mascote decide sozinha têm pelo menos **15 s** entre si; não repete a mesma frase.
 
-**Apresentação** (`gabi-ui.js`): um sprite por estado (`boas_vindas, curiosa, a_pensar, surpreendida, dica,
+**Apresentação** (`tutor-ui.js`): um sprite por estado (`boas_vindas, curiosa, a_pensar, surpreendida, dica,
 celebrar, incentivar, calma`), balão com cor por tipo, 3 bolinhas para o nível da pista. Em ecrã estreito começa
 recolhida e mostra só um sinal; abre sozinha apenas quando a criança pediu ajuda.
 
@@ -161,21 +169,20 @@ desafios. Exige gravar o companheiro em cada placa antes. Em sala, o **.hex por 
 
 ## 6. Receita — fazer uma versão nova (ex.: Buinho no Alentejo)
 
-1. **Copiar** a pasta `desafios/` para `desafios-<nome>/` (ou ramo). Não mexer em `vendor/`, `gabi-analise.js`,
-   `gabi-motor.js`, `motor.js`, `hex.js` salvo para blocos novos.
-2. **Mascote:** 8 ilustrações PNG com fundo transparente, uma por estado (mesmos nomes de ficheiro ou actualizar
-   `SPRITES` em `gabi-ui.js`). Validar em `gabi-demo.html`. Ilustrações aprovadas pelo Carlos antes de entrar.
-3. **Voz da mascote:** reescrever `gabi-regras.js` (boas-vindas, pistas, sucesso, gambiarra). Regras de escrita:
-   frases curtas; nível 1 pergunta, nível 2 orienta, nível 3 diz o gesto; nunca dar a solução inteira sozinha;
-   tratar por «tu»; a mascote também se engana.
-4. **Desafios:** reescrever a lista em `desafios.js` (título, missão, passos, material, blocos novos, `ok`). Para cada
-   desafio, as regras de dificuldade correspondentes em `gabi-regras.js` (mesma ordem/índice).
+1. **Criar um pacote** `pacotes/<id>.js` (copiar `pacotes/nico.js` como modelo) e juntar o `<id>` a `PACOTES`
+   em `js/pacote.js`. Não se copia a pasta nem se mexe no motor.
+2. **Mascote:** PNG com fundo transparente em `img/<id>/`, um por estado; mapear em `mascote.sprites`.
+   Validar em `estados.html?p=<id>`. Ilustrações aprovadas pelo Carlos antes de entrar.
+3. **Voz da mascote:** `gerais`, `comuns` e o `tutor` de cada desafio. Regras de escrita: frases curtas;
+   nível 1 pergunta, nível 2 orienta, nível 3 diz o gesto; nunca dar a solução inteira sozinha; tratar por «tu»;
+   a mascote também se engana; atenção ao género (`artigo`).
+4. **Desafios:** título, missão, passos (≤ 3, para o micro:bit do ecrã caber), material, blocos novos, `ok`.
 5. **Blocos novos** (se precisar — ex.: sensores): definir em `blocks.js` com a cor da categoria MakeCode certa,
    executar em `motor.js` (e escrever no registo), simular em `sim.js`, traduzir em `hex.js`, ler em
-   `gabi-analise.js` se as regras precisarem do valor.
-6. **Marca:** nome e cores no topo (`index.html`, `css/faisca.css`). Os blocos ficam com as cores do MakeCode.
-7. **Testar:** desafios em headless, mascote pelos cenários, e **gravar um .hex num micro:bit verdadeiro**.
-8. **Distribuir:** zip da pasta + `Abrir Faisca.bat`. Registar no `CATALOGO-APPS.md` do `buinho-os`.
+   `tutor-analise.js` se as regras precisarem do valor; juntar o XML da caixa em `xml` do pacote.
+6. **Marca:** `marca` no pacote; cores num bloco `html[data-pacote="<id>"]` no fim de `css/faisca.css`.
+7. **Testar:** casos do pacote em `testes/testar.js`, mascote pelos cenários, e **gravar um .hex num micro:bit verdadeiro**.
+8. **Distribuir:** zip da pasta + um `.bat`/`.html` de entrada por pacote. Registar no `CATALOGO-APPS.md` do `buinho-os`.
 
 ### Ideias já levantadas para versões seguintes
 - **Sentinela (citizen sensing):** blocos de som, luz e temperatura do micro:bit V2 (e, do kit de citizen sensing,
@@ -193,3 +200,43 @@ desafios. Exige gravar o companheiro em cada placa antes. Em sala, o **.hex por 
   surpreendido → `surpreendida` · a dar uma dica → `dica` · a celebrar → `celebrar` · a inventar → `incentivar`
   (ou novo estado para a extensão) · trapalhão/calmo → `calma` e pedido de gambiarra. Atenção ao género nos textos
   (o Nico é «ele»). Sprites finais: 8 PNG RGBA, estilo 4 minimalista aprovado; não usar os GIF/ZIP anteriores.
+
+## 7. Motor + pacotes (desde 17 Out 2026)
+
+**Um pacote** (`pacotes/<id>.js`) chama `Faisca.registarPacote({...})` com:
+
+```js
+{ id: 'nico', titulo: 'Nico · Desafios do Buinho Educativo', hex: 'nico',   // nome do .hex
+  chave: '…',                         // opcional: chave do progresso no browser
+  marca:   { nome, sub, icone },      // topo da página
+  mascote: { nome, descricao, artigo: 'o'|'a', pasta: 'img/nico/',
+             sprites: { boas_vindas, curiosa, a_pensar, surpreendida, dica, celebrar, incentivar, testar, calma } },
+  comuns, gerais,                     // regras comuns e mensagens gerais (inclui voltarPrograma)
+  xml: { … },                         // opcional: blocos novos para a caixa
+  desafios: [ { titulo, missao, passos, material, novos, teste, ok, livre?,
+                tutor: { boasVindas, parecePronto, testar, regras, sucesso, extensao, gambiarra } } ] }
+```
+
+- O desafio e as pistas ficam **no mesmo objecto** — deixam de estar emparelhados só pela ordem de dois ficheiros.
+- Os estados do motor são fixos; cada pacote decide que ilustração mostra em cada um (podem repetir-se).
+  Novo estado `testar` («agora experimenta»): Gabi → curiosa; Nico → a inventar.
+- `F.verif.causou(registo, teste, entrada)`: a saída tem de ter sido **causada** por aquela entrada (até à entrada
+  seguinte). Usado no detetive do Nico para que tocar no pino e logo a seguir agitar não conte como certo.
+- A Gabi mantém a chave do progresso (`faisca.desafios.v1`) e o nome do .hex: nada muda para quem já a usa.
+
+**Testes:** `NODE_PATH=<playwright-core> CHROMIUM=<chromium> node testes/testar.js` — para cada pacote, a solução
+certa passa e um programa errado não passa, ajuda em 3 níveis, gambiarra entra e sai, .hex gera-se; no Nico,
+cada programa a meio caminho reconhece a dificuldade certa.
+
+### Pacote Nico (protótipo, Fase 1)
+- **Desafio 1 — Acorda-o** (programação, reaproveitado da Gabi com a voz do Nico).
+- **Desafio 2 — Detetive dos circuitos** (reparação, novo): o micro:bit vira testador de continuidade
+  (crocodilos no P1 e no GND; ✔ + apito quando o circuito fecha). Na sala: testar materiais e encontrar o fio
+  partido num brinquedo ou lanterna avariada. 6 dificuldades reconhecidas (sem pino, sinal fora, sem sinal,
+  sem ícone, ícone errado, sem som); gambiarra do Nico: o detetive está dentro de «em agitar».
+- **Livre — Inventa** uma engenhoca para Messejana.
+- Tema Buinho Educativo (creme, azul, laranja); blocos com as cores do MakeCode.
+- **Sprites provisórios** recortados da prancha aprovada (estilo 4) — `img/nico/_referencia-prancha-estilo4.png`.
+  A prancha ainda diz «Farrusco»: é o nome antigo. Faltam os 8 PNG finais em alta resolução (mesmos nomes).
+- Por fazer: percursos de natureza/fabricação/gambiarra; desafios de bancada (sem micro:bit a validar)
+  como tipo novo; animação discreta por camadas (Fase 3); teste com crianças e com micro:bit verdadeiro.

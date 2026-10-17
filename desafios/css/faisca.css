@@ -38,6 +38,8 @@ body {
 }
 .marca { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
 .marca-icone { width: 32px; height: 32px; }
+.marca-icone-caixa { display: flex; }
+.marca-icone-caixa img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #fff; }
 .marca-nome { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
 .marca-sub { font-size: 14px; color: var(--sol); }
 
@@ -177,8 +179,8 @@ body {
   .editor { min-height: 560px; height: 94vh; }
 }
 
-/* ---------------------------------------------------------------- Gabi */
-.gabi {
+/* ---------------------------------------------------------------- Mascote (tutor) */
+.tutor {
   flex: 0 0 auto;
   display: flex;
   align-items: flex-end;
@@ -188,25 +190,25 @@ body {
   background: #fff;
   min-height: 148px;
 }
-.gabi-avatar {
+.tutor-avatar {
   flex: 0 0 auto;
   width: 150px; height: 140px;
   padding: 0; border: 0; background: none; cursor: pointer;
   position: relative;
   display: flex; align-items: flex-end; justify-content: center;
 }
-.gabi-avatar img { max-width: 100%; max-height: 100%; object-fit: contain; object-position: bottom; display: block; }
-.gabi-avatar:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
-.gabi-avatar[data-novo]::after {
+.tutor-avatar img { max-width: 100%; max-height: 100%; object-fit: contain; object-position: bottom; display: block; }
+.tutor-avatar:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.tutor-avatar[data-novo]::after {
   content: ''; position: absolute; top: 4px; right: 4px;
   width: 14px; height: 14px; border-radius: 50%;
   background: var(--vermelho); border: 2px solid #fff;
 }
-@keyframes gabiSalto { 0% { transform: translateY(0) } 35% { transform: translateY(-8px) } 70% { transform: translateY(0) } 85% { transform: translateY(-3px) } 100% { transform: translateY(0) } }
-.gabi-avatar.salto img { animation: gabiSalto 520ms ease-out; }
-@media (prefers-reduced-motion: reduce) { .gabi-avatar.salto img { animation: none; } }
+@keyframes tutorSalto { 0% { transform: translateY(0) } 35% { transform: translateY(-8px) } 70% { transform: translateY(0) } 85% { transform: translateY(-3px) } 100% { transform: translateY(0) } }
+.tutor-avatar.salto img { animation: tutorSalto 520ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .tutor-avatar.salto img { animation: none; } }
 
-.gabi-balao {
+.tutor-balao {
   flex: 1 1 auto;
   align-self: center;
   position: relative;
@@ -217,44 +219,44 @@ body {
   border-radius: 12px;
   min-width: 0;
 }
-.gabi-balao::before {
+.tutor-balao::before {
   content: ''; position: absolute; left: -13px; bottom: 22px;
   border: 12px solid transparent; border-right-color: var(--tinta); border-left: 0;
 }
-.gabi-balao::after {
+.tutor-balao::after {
   content: ''; position: absolute; left: -9px; bottom: 24px;
   border: 10px solid transparent; border-right-color: #fff; border-left: 0;
 }
-.gabi-balao.tipo-convite { border-style: dashed; }
-.gabi-balao.tipo-convite .gabi-texto { color: var(--cinza); font-weight: 400; }
-.gabi-balao.tipo-correcao, .gabi-balao.tipo-sucesso { background: #fff8e3; }
-.gabi-balao.tipo-correcao::after, .gabi-balao.tipo-sucesso::after { border-right-color: #fff8e3; }
-.gabi-cabeca { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
-.gabi-nome { font-size: 13px; font-weight: 700; color: var(--azul); }
-.gabi-nivel { display: inline-flex; gap: 4px; }
-.gabi-nivel span { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--tinta); }
-.gabi-nivel span.on { background: var(--sol); }
-.gabi-texto { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.35; }
+.tutor-balao.tipo-convite { border-style: dashed; }
+.tutor-balao.tipo-convite .tutor-texto { color: var(--cinza); font-weight: 400; }
+.tutor-balao.tipo-correcao, .tutor-balao.tipo-sucesso { background: #fff8e3; }
+.tutor-balao.tipo-correcao::after, .tutor-balao.tipo-sucesso::after { border-right-color: #fff8e3; }
+.tutor-cabeca { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
+.tutor-nome { font-size: 13px; font-weight: 700; color: var(--azul); }
+.tutor-nivel { display: inline-flex; gap: 4px; }
+.tutor-nivel span { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--tinta); }
+.tutor-nivel span.on { background: var(--sol); }
+.tutor-texto { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.35; }
 
-.gabi-acoes { flex: 0 0 auto; align-self: center; display: flex; flex-direction: column; gap: 8px; padding-bottom: 6px; }
-.gabi-fechar {
+.tutor-acoes { flex: 0 0 auto; align-self: center; display: flex; flex-direction: column; gap: 8px; padding-bottom: 6px; }
+.tutor-fechar {
   min-height: 36px; border: 0; background: none; color: var(--cinza);
   font: 700 14px 'Asap', sans-serif; text-decoration: underline; cursor: pointer;
 }
 
 /* recolhida: só a cabeça e o botão de ajuda */
-.gabi.recolhida { min-height: 0; padding: 4px 16px; align-items: center; }
-.gabi.recolhida .gabi-avatar { width: 60px; height: 56px; }
-.gabi.recolhida .gabi-balao, .gabi.recolhida .gabi-fechar, .gabi.recolhida #gabiGambiarra { display: none; }
-.gabi.recolhida .gabi-acoes { flex-direction: row; padding: 0; }
+.tutor.recolhida { min-height: 0; padding: 4px 16px; align-items: center; }
+.tutor.recolhida .tutor-avatar { width: 60px; height: 56px; }
+.tutor.recolhida .tutor-balao, .tutor.recolhida .tutor-fechar, .tutor.recolhida #tutorGambiarra { display: none; }
+.tutor.recolhida .tutor-acoes { flex-direction: row; padding: 0; }
 
-.festa-gabi { width: 150px; height: auto; animation: salto 600ms ease-out; }
+.festa-mascote { width: 150px; height: auto; animation: salto 600ms ease-out; }
 .festa-extra { margin: -8px 0 22px !important; font-size: 16px !important; color: var(--cinza); }
 
 @media (max-width: 900px) {
-  .gabi-avatar { width: 96px; height: 92px; }
-  .gabi-texto { font-size: 16px; }
-  .gabi { min-height: 108px; }
+  .tutor-avatar { width: 96px; height: 92px; }
+  .tutor-texto { font-size: 16px; }
+  .tutor { min-height: 108px; }
 }
 
 /* Enviar para o micro:bit (.hex) */
@@ -268,3 +270,20 @@ body {
 .enviar-cartao .enviar-estado.erro { color: #b42318; }
 .btn-enviar { background: var(--sol); color: var(--tinta); }
 .btn-enviar:hover { background: #fff; }
+
+/* ---------------------------------------------------------------- tema Nico (Buinho Educativo)
+   Creme, azul e laranja do Buinho Educativo. Os blocos mantêm as cores do MakeCode. */
+html[data-pacote="nico"] {
+  --azul: #2038a6;
+  --azul-escuro: #172a80;
+  --sol: #fa6415;
+  --parede: #faf0e1;
+}
+html[data-pacote="nico"] .topo { background: var(--azul); }
+html[data-pacote="nico"] .tutor-balao.tipo-correcao,
+html[data-pacote="nico"] .tutor-balao.tipo-sucesso { background: #fff3e6; }
+html[data-pacote="nico"] .tutor-balao.tipo-correcao::after,
+html[data-pacote="nico"] .tutor-balao.tipo-sucesso::after { border-right-color: #fff3e6; }
+html[data-pacote="nico"] .passo.feito { background: #fff; border-color: #fff; color: var(--azul); }
+html[data-pacote="nico"] .passo.feito + .passo::before { background: #fff; }
+html[data-pacote="nico"] .passo.atual { box-shadow: 0 0 0 4px rgba(250, 100, 21, 0.3); }

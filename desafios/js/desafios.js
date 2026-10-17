@@ -1,12 +1,14 @@
-/* Faísca Desafios — os desafios. Cada um traz blocos novos para a caixa.
- * Para criar outro desafio basta acrescentar um objecto a esta lista.
+/* Faísca Desafios — base dos desafios (comum a todos os pacotes).
+ * Os desafios em si vivem nos pacotes (pacotes/<id>.js), que os registam com
+ * Faisca.registarPacote({...}). Aqui ficam os blocos da caixa, as ajudas de
+ * verificação por comportamento e a montagem da caixa de cada desafio.
  */
 (function () {
   'use strict';
   const F = window.Faisca;
 
   // Blocos tal como aparecem na caixa (com as pílulas de valor já postas)
-  const XML = {
+  const XML = F.XML_CAIXA = {
     mk_agitar: '<block type="mk_agitar"></block>',
     mk_logo: '<block type="mk_logo"></block>',
     mk_botao: '<block type="mk_botao"></block>',
@@ -18,6 +20,7 @@
     mk_icone_coracao: '<block type="mk_icone"><field name="I">Heart</field></block>',
     mk_icone_pequeno: '<block type="mk_icone"><field name="I">SmallHeart</field></block>',
     mk_icone_triste: '<block type="mk_icone"><field name="I">Sad</field></block>',
+    mk_icone_sim: '<block type="mk_icone"><field name="I">Yes</field></block>',
     mk_limpar: '<block type="mk_limpar"></block>',
     mk_pausa: '<block type="mk_pausa"><value name="MS"><shadow type="mk_pausa_menu"><field name="V">200</field></shadow></value></block>',
     mk_repetir: '<block type="mk_repetir"><value name="N"><shadow type="mk_num"><field name="NUM">4</field></shadow></value></block>',
@@ -67,81 +70,22 @@
   }
   const algumPino = (reg, teste) => ['pino:P0', 'pino:P1', 'pino:P2'].some(p => depois(reg, p, teste));
 
-  const DESAFIOS = [
-    {
-      titulo: 'Acorda-o',
-      missao: 'Faz o micro:bit sorrir quando o agitas.',
-      passos: ['Arrasta o bloco «em agitar».', 'Põe lá dentro «mostrar ícone» com a cara contente.', 'Experimenta: carrega em AGITAR.'],
-      material: 'micro:bit',
-      novos: ['mk_agitar', 'mk_icone'],
-      teste: 'agitar',
-      ok: r => depois(r, 'agitar', s => s.includes('icone:Happy')),
-    },
-    {
-      titulo: 'Coração a bater',
-      missao: 'Quando tocas no logótipo, o coração bate 4 vezes.',
-      passos: ['O logotipo é o desenho dourado lá em cima.', 'Dentro de «repetir 4 vezes»: coração, pausa, coração pequeno, pausa.', 'Experimenta: toca no logótipo.'],
-      material: 'micro:bit V2',
-      novos: ['mk_logo', 'mk_repetir', 'mk_icone_coracao', 'mk_icone_pequeno', 'mk_pausa'],
-      teste: 'logo',
-      ok: r => visiveis(r, 'logo', 'Heart') >= 4 && visiveis(r, 'logo', 'SmallHeart') >= 4,
-    },
-    {
-      titulo: 'Sim ou não?',
-      missao: 'Botão A: cara contente. Botão B: cara triste.',
-      passos: ['Usa dois blocos «no botão premido».', 'No segundo, muda a letra para B.', 'Experimenta os dois botões.'],
-      material: 'micro:bit',
-      novos: ['mk_botao', 'mk_botao_B', 'mk_icone_triste'],
-      teste: 'botao:A',
-      ok: r => depois(r, 'botao:A', s => s.includes('icone:Happy')) && depois(r, 'botao:B', s => s.includes('icone:Sad')),
-    },
-    {
-      titulo: 'Faz barulho',
-      missao: 'Carrega no A e no B ao mesmo tempo e o micro:bit ri-se.',
-      passos: ['Usa «no botão A+B premido».', 'Põe lá dentro «tocar som».', 'Escolhe o som que quiseres.'],
-      material: 'micro:bit V2 (altifalante)',
-      novos: ['mk_botao_AB', 'mk_som'],
-      teste: 'botao:AB',
-      ok: r => depois(r, 'botao:AB', s => s.some(x => x.startsWith('som:'))),
-    },
-    {
-      titulo: 'Piano de fruta',
-      missao: 'Toca numa banana e o micro:bit toca uma nota.',
-      passos: ['Crocodilo do pin 1 à banana (ou a papel de alumínio).', 'Outro crocodilo no GND, seguro na mão.', 'Usa «no pin P1 premido» com «tocar tom».'],
-      material: '2 crocodilos + uma fruta',
-      novos: ['mk_pino_tocado', 'mk_tom'],
-      teste: 'pino:P1',
-      ok: r => algumPino(r, s => s.some(x => x.startsWith('tom:'))),
-    },
-    {
-      titulo: 'Luz de fora',
-      missao: 'Quando a banana toca, acende-se uma luz de fora.',
-      passos: ['LED com crocodilos: perna comprida no pin 2, perna curta no GND.', '«gravação digital pin P2 para 1» antes da nota, «para 0» depois.', 'Experimenta: toca no pin 1.'],
-      material: 'LED + 2 crocodilos',
-      novos: ['mk_digital_1', 'mk_digital_0'],
-      teste: 'pino:P1',
-      // aceita qualquer pino de saída: o que conta é acender, tocar e apagar
-      ok: r => algumPino(r, s => {
-        const a = s.findIndex(x => /^digital:P\d:1$/.test(x));
-        if (a < 0) return false;
-        const pino = s[a].split(':')[1];
-        const n = s.findIndex((x, i) => i > a && x.startsWith('tom:'));
-        return n > a && s.indexOf('digital:' + pino + ':0', n) > n;
-      }),
-    },
-    {
-      titulo: 'Inventa',
-      missao: 'Agora é contigo: inventa o teu brinquedo.',
-      passos: ['Tens todos os blocos, mais «para sempre» e «se… então… senão».', 'Experimenta «se está escuro»: no ecrã, carrega em APAGAR A LUZ.'],
-      material: 'o que tiveres',
-      novos: ['mk_sempre', 'mk_se', 'mk_escuro', 'mk_botao_premido', 'mk_limpar'],
-      livre: true,
-      ok: () => false,
-    },
-  ];
+  // Como «depois», mas só conta as saídas até à entrada seguinte: a saída tem de ter
+  // sido causada por ESTA entrada (ex.: tocar no pino), não por outra logo a seguir (agitar).
+  function causou(reg, teste, entradaOk, janela = 8000) {
+    for (let i = 0; i < reg.length; i++) {
+      const e = reg[i];
+      if (e.dir !== 'in' || !entradaOk(e.v)) continue;
+      const seguintes = [];
+      for (let j = i + 1; j < reg.length && reg[j].t - e.t <= janela && reg[j].dir === 'out'; j++) seguintes.push(reg[j].v);
+      if (teste(seguintes)) return true;
+    }
+    return false;
+  }
 
   // Caixa de blocos de um desafio: os blocos de todos os desafios até ele
   function caixa(n) {
+    const DESAFIOS = F.DESAFIOS;
     const tipos = [];
     for (let i = 0; i <= n; i++) for (const k of DESAFIOS[i].novos) if (!tipos.includes(k)) tipos.push(k);
     const novos = new Set(DESAFIOS[n].novos);
@@ -155,6 +99,17 @@
     return xml + '</xml>';
   }
 
-  F.DESAFIOS = DESAFIOS;
   F.caixa = caixa;
+  F.verif = { depois, conta, visiveis, algumPino, causou };
+
+  // ---------------------------------------------------- pacotes
+  // Um pacote junta mascote, marca, mensagens gerais e a lista de desafios.
+  // Cada desafio traz a sua parte pedagógica em «tutor» (regras, pistas, gambiarra),
+  // para que o desafio e as pistas nunca fiquem desemparelhados.
+  F.registarPacote = function (p) {
+    if (p.xml) Object.assign(XML, p.xml);
+    F.PACOTE = p;
+    F.DESAFIOS = p.desafios;
+    F.TUTOR = { DESAFIOS: p.desafios.map(d => d.tutor), COMUNS: p.comuns || [], GERAIS: p.gerais };
+  };
 })();

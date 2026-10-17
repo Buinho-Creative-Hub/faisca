@@ -1,10 +1,20 @@
-/* Faísca Desafios — cola tudo: desafios, editor, micro:bit do ecrã e o verdadeiro. */
+/* Faísca Desafios — cola tudo: pacote (mascote + desafios), editor, micro:bit do ecrã e o verdadeiro. */
 (function () {
   'use strict';
   const F = window.Faisca;
   const $ = id => document.getElementById(id);
-  const CHAVE = 'faisca.desafios.v1';
+  const P = F.PACOTE;
+  const CHAVE = P.chave || ('faisca.' + P.id + '.v1');
   const params = new URLSearchParams(location.search);
+
+  // ------------------------------------------------------------ marca e mascote do pacote
+  document.title = P.titulo;
+  $('marcaIcone').innerHTML = P.marca.icone || '';     // conteúdo do próprio pacote, não da criança
+  $('marcaNome').textContent = P.marca.nome;
+  $('marcaSub').textContent = P.marca.sub;
+  $('tutor').setAttribute('aria-label', P.mascote.descricao);
+  $('tutorNome').textContent = P.mascote.nome;
+  $('tutorGambiarra').textContent = 'Ajudar ' + P.mascote.artigo + ' ' + P.mascote.nome;
 
   // ------------------------------------------------------------ estado guardado
   function ler() { try { return JSON.parse(localStorage.getItem(CHAVE)) || {}; } catch (e) { return {}; } }
@@ -61,24 +71,26 @@
     verificar();
   });
 
-  // ------------------------------------------------------------ Gabi
-  const gabiUI = new F.GabiUI();
-  const gabi = new F.GabiMotor(m => gabiUI.mostrar(m));
-  let gambiarra = null;      // { xml } do programa da criança enquanto ajuda a Gabi
+  // ------------------------------------------------------------ mascote (tutor)
+  const tutorUI = new F.TutorUI(P.mascote);
+  const tutor = new F.TutorMotor(m => tutorUI.mostrar(m));
+  $('festaMascote').src = tutorUI.sprite('celebrar');
+  $('festaMascote').alt = P.mascote.nome + ' a celebrar';
+  let gambiarra = null;      // { xml } do programa da criança enquanto ajuda a mascote
   let sucessoEm = -Infinity;
   let falha = null;
-  const analisar = () => gabi.programaMudou(F.gabiAnalisar(ws));
-  setInterval(() => gabi.tick(), 1000);
+  const analisar = () => tutor.programaMudou(F.analisar(ws));
+  setInterval(() => tutor.tick(), 1000);
   setInterval(() => verificar(), 400);   // algumas validações dependem do tempo que um desenho fica visível
 
   function entrada(k, origem) {
     if (k === 'agitar' && origem === 'microbit') { sim.svg.classList.remove('a-agitar'); void sim.svg.getBBox(); sim.svg.classList.add('a-agitar'); }
     motor.acontecimento(k);
-    // A Gabi espera que o programa corra antes de concluir que o teste falhou
-    gabi.testou();
+    // A mascote espera que o programa corra antes de concluir que o teste falhou
+    tutor.testou();
     const t0 = performance.now();
     clearTimeout(falha);
-    falha = setTimeout(() => { if (sucessoEm < t0) gabi.testeFalhou(); }, 4000);
+    falha = setTimeout(() => { if (sucessoEm < t0) tutor.testeFalhou(); }, 4000);
   }
 
   function reiniciar() {
@@ -109,14 +121,14 @@
       festejado = estado.atual;
       sucessoEm = performance.now();
       if (gambiarra) {
-        const [e, t] = F.GABI.GERAIS.gambiarraObrigada;
-        gabiUI.mostrar({ estado: e, texto: t, tipo: 'sucesso', pedida: true });
+        const [e, t] = F.TUTOR.GERAIS.gambiarraObrigada;
+        tutorUI.mostrar({ estado: e, texto: t, tipo: 'sucesso', pedida: true });
         return;
       }
-      const s = gabi.sucesso();
+      const s = tutor.sucesso();
       if (estado.feitos <= estado.atual) { estado.feitos = estado.atual + 1; gravar(); }
       desenharCaminho();
-      atualizarBotoesGabi();
+      atualizarBotoesTutor();
       setTimeout(() => festa(s), 900);
     }
   }
@@ -154,37 +166,37 @@
     ws.updateToolbox(F.caixa(n));
     desenharCaminho();
     reiniciar();
-    gabi.entrarDesafio(n, n < estado.feitos);
+    tutor.entrarDesafio(n, n < estado.feitos);
     analisar();
-    atualizarBotoesGabi();
+    atualizarBotoesTutor();
   }
 
-  // ------------------------------------------------------------ a Gabi também erra
+  // ------------------------------------------------------------ a mascote também erra (gambiarra)
   function carregar(xml) {
     ws.clear();
     try { Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(xml), ws); } catch (e) { console.warn(e); }
   }
-  function atualizarBotoesGabi() {
-    const g = F.GABI.DESAFIOS[estado.atual] && F.GABI.DESAFIOS[estado.atual].gambiarra;
-    $('gabiGambiarra').hidden = !(g && estado.atual < estado.feitos && !gambiarra);
-    $('gabiVoltar').hidden = !gambiarra;
+  function atualizarBotoesTutor() {
+    const g = F.TUTOR.DESAFIOS[estado.atual] && F.TUTOR.DESAFIOS[estado.atual].gambiarra;
+    $('tutorGambiarra').hidden = !(g && estado.atual < estado.feitos && !gambiarra);
+    $('tutorVoltar').hidden = !gambiarra;
   }
   function entrarGambiarra() {
-    const g = F.GABI.DESAFIOS[estado.atual].gambiarra;
+    const g = F.TUTOR.DESAFIOS[estado.atual].gambiarra;
     gambiarra = { xml: estado.xml };
     festejado = -1;
     carregar(g.xml);
-    gabi.reset(); gabi.n = estado.atual;
-    gabiUI.mostrar({ estado: 'surpreendida', texto: g.pedido, tipo: 'gambiarra' });
-    atualizarBotoesGabi();
+    tutor.reset(); tutor.n = estado.atual;
+    tutorUI.mostrar({ estado: 'surpreendida', texto: g.pedido, tipo: 'gambiarra' });
+    atualizarBotoesTutor();
   }
   function sairGambiarra(avisar = true) {
     const xml = gambiarra.xml;
     gambiarra = null;
     carregar(xml || '<xml></xml>');
     festejado = estado.atual;
-    if (avisar) gabiUI.mostrar({ estado: 'incentivar', texto: 'De volta ao teu programa. Obrigada pela ajuda!', tipo: 'info' });
-    atualizarBotoesGabi();
+    if (avisar) { const [e, t] = F.TUTOR.GERAIS.voltarPrograma; tutorUI.mostrar({ estado: e, texto: t, tipo: 'info' }); }
+    atualizarBotoesTutor();
   }
 
   const CADEADO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
@@ -217,9 +229,9 @@
     document.querySelector('.sim-placa').style.filter = escuro ? 'brightness(0.55)' : '';
   });
   $('btnRecomecar').addEventListener('click', reiniciar);
-  $('gabiAjuda').addEventListener('click', () => { gabiUI.recolher(false, false); gabi.pedirAjuda(); });
-  $('gabiGambiarra').addEventListener('click', entrarGambiarra);
-  $('gabiVoltar').addEventListener('click', () => sairGambiarra(true));
+  $('tutorAjuda').addEventListener('click', () => { tutorUI.recolher(false, false); tutor.pedirAjuda(); });
+  $('tutorGambiarra').addEventListener('click', entrarGambiarra);
+  $('tutorVoltar').addEventListener('click', () => sairGambiarra(true));
   $('btnFicar').addEventListener('click', () => { $('festa').hidden = true; });
   $('btnSeguinte').addEventListener('click', () => { $('festa').hidden = true; mudarDesafio(estado.atual + 1); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') $('festa').hidden = true; });
@@ -252,7 +264,7 @@
 
   // ------------------------------------------------ Enviar para o micro:bit (.hex por USB)
   let hexPronto = null;
-  const nomeHex = () => 'faisca-desafio-' + (estado.atual + 1) + '.hex';
+  const nomeHex = () => (P.hex || P.id) + '-desafio-' + (estado.atual + 1) + '.hex';
   const podeGravar = typeof window.showSaveFilePicker === 'function';
   function estadoEnviar(txt, tipo = '') { const e = $('enviarEstado'); e.textContent = txt; e.className = 'enviar-estado ' + tipo; }
   async function prepararHex() {
@@ -301,5 +313,5 @@
 
   mudarDesafio(estado.atual);
   window.addEventListener('resize', () => Blockly.svgResize(ws));
-  F.app = { ws, motor, sim, ble, estado, mudarDesafio, registo: () => registo, gabi, gabiUI, entrada, entrarGambiarra, sairGambiarra };
+  F.app = { ws, motor, sim, ble, estado, mudarDesafio, registo: () => registo, tutor, tutorUI, entrada, entrarGambiarra, sairGambiarra };
 })();

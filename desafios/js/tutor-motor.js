@@ -1,8 +1,9 @@
-/* Gabi — motor pedagógico. Decide QUANDO e O QUE a Gabi diz.
+/* Tutor (mascote) — motor pedagógico. Decide QUANDO e O QUE a mascote diz.
+ * O conteúdo (regras, pistas, mensagens) vem do pacote: F.TUTOR.
  * Não toca na interface: recebe acontecimentos e devolve mensagens por callback.
  *
  *   entrarDesafio(n)        a criança abriu um desafio
- *   programaMudou(analise)  o programa mudou (análise de gabi-analise.js)
+ *   programaMudou(analise)  o programa mudou (análise de tutor-analise.js)
  *   testou()                a criança experimentou (agitar, botão, logotipo, pino…)
  *   testeFalhou()           passou o tempo do teste e o desafio não ficou cumprido
  *   pedirAjuda()            a criança carregou em «Ajuda»
@@ -17,14 +18,14 @@
 
   const INATIVIDADE_MS = 45000;   // convite discreto, nunca uma interrupção
   const TESTAR_MS = 7000;         // programa parece pronto mas ninguém experimentou
-  const PAUSA_PROATIVA_MS = 15000; // intervalo mínimo entre mensagens que a Gabi decide sozinha
+  const PAUSA_PROATIVA_MS = 15000; // intervalo mínimo entre mensagens que a mascote decide sozinha
   const RAPIDO_MS = 120000;       // acabou depressa → propõe uma extensão
 
-  class GabiMotor {
+  class TutorMotor {
     constructor(dizer, agora = () => performance.now()) {
       this.dizer = dizer;
       this.agora = agora;
-      this.cfg = F.GABI;
+      this.cfg = F.TUTOR;
       this.n = 0;
       this.reset();
     }
@@ -128,7 +129,7 @@
         const nivel = Math.min((this.niveis[r.id] || 0) + 1, 3);
         return this.mostrarPista(r, nivel, true);
       }
-      if (a && safe(() => this.d.parecePronto(a)) && !this.testado) return this.falar('curiosa', this.d.testar, 'testar');
+      if (a && safe(() => this.d.parecePronto(a)) && !this.testado) return this.falar('testar', this.d.testar, 'testar');
       const [e, t] = this.cfg.GERAIS.semPistas;
       return this.falar(e, t, 'info');
     }
@@ -155,7 +156,7 @@
       // Programa parece pronto mas ainda não foi experimentado: distinguir presença de execução
       if (!this.testado && t - this.ultimaMudanca > TESTAR_MS && this.avisouTestar !== a.assinatura && safe(() => this.d.parecePronto(a))) {
         this.avisouTestar = a.assinatura;
-        this.proativa('curiosa', this.d.testar, 'testar');
+        this.proativa('testar', this.d.testar, 'testar');
         return;
       }
       // Inactividade: convite discreto, uma vez por período parado
@@ -167,7 +168,7 @@
     }
   }
 
-  function safe(fn) { try { return fn(); } catch (e) { console.warn('Gabi', e); return false; } }
+  function safe(fn) { try { return fn(); } catch (e) { console.warn('Tutor', e); return false; } }
 
-  F.GabiMotor = GabiMotor;
+  F.TutorMotor = TutorMotor;
 })();

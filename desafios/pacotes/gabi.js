@@ -1,24 +1,25 @@
-/* Gabi — regras e mensagens de cada desafio.
+/* Pacote Gabi — Faísca Desafios com a Gabi, a capivara da gambiarra.
  *
- * Cada regra descreve uma dificuldade que se reconhece no programa:
+ * Um pacote = mascote + marca + mensagens + desafios. O motor é comum (js/).
+ * Conteúdo original de 16–17 Out 2026, testado com micro:bit V2; mantido tal e qual.
+ *
+ * Cada regra pedagógica descreve uma dificuldade que se reconhece no programa:
  *   id         nome curto
  *   ativa(a)   true quando a dificuldade está presente (a = análise do programa)
  *   pistas     três níveis: [estado do sprite, texto]
  *                1 pista conceptual · 2 pista orientadora · 3 ajuda concreta
  *   corrigido  o que a Gabi diz quando a criança resolve sozinha
  * As regras são lidas pela ordem: a primeira activa é a que conta.
- * O sucesso NÃO é decidido aqui: é o comportamento do programa (desafios.js).
+ * O sucesso NÃO é decidido nas regras: é o comportamento do programa (ok).
  *
- * Estados do sprite: boas_vindas, curiosa, a_pensar, surpreendida, dica, celebrar, incentivar, calma
+ * Estados do sprite: boas_vindas, curiosa, a_pensar, surpreendida, dica, celebrar, incentivar, calma, testar
  */
 (function () {
   'use strict';
   const F = window.Faisca = window.Faisca || {};
 
-  // ------------------------------------------------------------ ajudas
-  const icones = (ev, nome) => ev ? ev.plano.filter(p => p.tipo === 'mk_icone' && (!nome || p.icone === nome)) : [];
-  const tem = (ev, tipo) => !!ev && ev.plano.some(p => p.tipo === tipo);
-  const soltoCom = (a, tipo) => a.soltosPlano().some(p => p.tipo === tipo);
+  const { icones, tem, soltoCom } = F.ajudasTutor;
+  const { depois, visiveis, algumPino } = F.verif;
 
   // Regras comuns a todos os desafios (vêm depois das específicas)
   const COMUNS = [
@@ -34,7 +35,7 @@
     },
   ];
 
-  const DESAFIOS = [
+  const TUTOR = [
     // ---------------------------------------------------------- 1 · Acorda-o
     {
       boasVindas: ['boas_vindas', 'Olá! Sou a Gabi, a capivara da gambiarra. Vamos acordar este micro:bit? Quero vê-lo sorrir quando o agitas.'],
@@ -400,7 +401,106 @@
     vazio: ['curiosa', 'A área cinzenta está vazia. Que tal arrastar o primeiro bloco da coluna branca?'],
     testeFalhou: ['a_pensar', 'Hmm… ainda não é bem isso. Olha para o micro:bit: o que é que ele fez?'],
     gambiarraObrigada: ['celebrar', 'Obrigada! Reparaste a minha gambiarra. És mesmo maker!'],
+    voltarPrograma: ['incentivar', 'De volta ao teu programa. Obrigada pela ajuda!'],
   };
 
-  F.GABI = { DESAFIOS, COMUNS, GERAIS };
+  // ------------------------------------------------------------ desafios (o que se pede e como se valida)
+  const DESAFIOS = [
+    {
+      titulo: 'Acorda-o',
+      missao: 'Faz o micro:bit sorrir quando o agitas.',
+      passos: ['Arrasta o bloco «em agitar».', 'Põe lá dentro «mostrar ícone» com a cara contente.', 'Experimenta: carrega em AGITAR.'],
+      material: 'micro:bit',
+      novos: ['mk_agitar', 'mk_icone'],
+      teste: 'agitar',
+      ok: r => depois(r, 'agitar', s => s.includes('icone:Happy')),
+    },
+    {
+      titulo: 'Coração a bater',
+      missao: 'Quando tocas no logótipo, o coração bate 4 vezes.',
+      passos: ['O logotipo é o desenho dourado lá em cima.', 'Dentro de «repetir 4 vezes»: coração, pausa, coração pequeno, pausa.', 'Experimenta: toca no logótipo.'],
+      material: 'micro:bit V2',
+      novos: ['mk_logo', 'mk_repetir', 'mk_icone_coracao', 'mk_icone_pequeno', 'mk_pausa'],
+      teste: 'logo',
+      ok: r => visiveis(r, 'logo', 'Heart') >= 4 && visiveis(r, 'logo', 'SmallHeart') >= 4,
+    },
+    {
+      titulo: 'Sim ou não?',
+      missao: 'Botão A: cara contente. Botão B: cara triste.',
+      passos: ['Usa dois blocos «no botão premido».', 'No segundo, muda a letra para B.', 'Experimenta os dois botões.'],
+      material: 'micro:bit',
+      novos: ['mk_botao', 'mk_botao_B', 'mk_icone_triste'],
+      teste: 'botao:A',
+      ok: r => depois(r, 'botao:A', s => s.includes('icone:Happy')) && depois(r, 'botao:B', s => s.includes('icone:Sad')),
+    },
+    {
+      titulo: 'Faz barulho',
+      missao: 'Carrega no A e no B ao mesmo tempo e o micro:bit ri-se.',
+      passos: ['Usa «no botão A+B premido».', 'Põe lá dentro «tocar som».', 'Escolhe o som que quiseres.'],
+      material: 'micro:bit V2 (altifalante)',
+      novos: ['mk_botao_AB', 'mk_som'],
+      teste: 'botao:AB',
+      ok: r => depois(r, 'botao:AB', s => s.some(x => x.startsWith('som:'))),
+    },
+    {
+      titulo: 'Piano de fruta',
+      missao: 'Toca numa banana e o micro:bit toca uma nota.',
+      passos: ['Crocodilo do pin 1 à banana (ou a papel de alumínio).', 'Outro crocodilo no GND, seguro na mão.', 'Usa «no pin P1 premido» com «tocar tom».'],
+      material: '2 crocodilos + uma fruta',
+      novos: ['mk_pino_tocado', 'mk_tom'],
+      teste: 'pino:P1',
+      ok: r => algumPino(r, s => s.some(x => x.startsWith('tom:'))),
+    },
+    {
+      titulo: 'Luz de fora',
+      missao: 'Quando a banana toca, acende-se uma luz de fora.',
+      passos: ['LED com crocodilos: perna comprida no pin 2, perna curta no GND.', '«gravação digital pin P2 para 1» antes da nota, «para 0» depois.', 'Experimenta: toca no pin 1.'],
+      material: 'LED + 2 crocodilos',
+      novos: ['mk_digital_1', 'mk_digital_0'],
+      teste: 'pino:P1',
+      // aceita qualquer pino de saída: o que conta é acender, tocar e apagar
+      ok: r => algumPino(r, s => {
+        const a = s.findIndex(x => /^digital:P\d:1$/.test(x));
+        if (a < 0) return false;
+        const pino = s[a].split(':')[1];
+        const n = s.findIndex((x, i) => i > a && x.startsWith('tom:'));
+        return n > a && s.indexOf('digital:' + pino + ':0', n) > n;
+      }),
+    },
+    {
+      titulo: 'Inventa',
+      missao: 'Agora é contigo: inventa o teu brinquedo.',
+      passos: ['Tens todos os blocos, mais «para sempre» e «se… então… senão».', 'Experimenta «se está escuro»: no ecrã, carrega em APAGAR A LUZ.'],
+      material: 'o que tiveres',
+      novos: ['mk_sempre', 'mk_se', 'mk_escuro', 'mk_botao_premido', 'mk_limpar'],
+      livre: true,
+      ok: () => false,
+    },
+  ];
+
+  F.registarPacote({
+    id: 'gabi',
+    chave: 'faisca.desafios.v1',          // mantém o progresso já guardado nos computadores
+    hex: 'faisca',                        // faisca-desafio-N.hex, como antes
+    titulo: 'Faísca · Desafios micro:bit',
+    marca: {
+      nome: 'Faísca',
+      sub: 'desafios micro:bit',
+      icone: '<svg class="marca-icone" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#2364ff"/><path d="M18 4 8 18h7l-2 10 11-15h-7z" fill="#ffc850"/></svg>',
+    },
+    mascote: {
+      nome: 'Gabi',
+      descricao: 'Gabi, a capivara da gambiarra',
+      artigo: 'a',                          // «Esconder a Gabi», «Ajudar a Gabi»
+      pasta: 'img/gabi/',
+      sprites: {
+        boas_vindas: '01_boas_vindas', curiosa: '02_curiosa', a_pensar: '03_a_pensar', surpreendida: '04_surpreendida',
+        dica: '05_a_dar_uma_dica', celebrar: '06_a_celebrar', incentivar: '07_a_incentivar', calma: '08_calma',
+        testar: '02_curiosa',
+      },
+    },
+    comuns: COMUNS,
+    gerais: GERAIS,
+    desafios: DESAFIOS.map((d, i) => Object.assign(d, { tutor: TUTOR[i] })),
+  });
 })();

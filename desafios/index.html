@@ -4,15 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Faísca · Desafios micro:bit</title>
+<script src="js/pacote.js"></script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232364ff'/%3E%3Cpath d='M18 4 8 18h7l-2 10 11-15h-7z' fill='%23ffc850'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/faisca.css">
 </head>
 <body>
 <header class="topo">
   <div class="marca">
-    <svg class="marca-icone" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#2364ff"/><path d="M18 4 8 18h7l-2 10 11-15h-7z" fill="#ffc850"/></svg>
-    <span class="marca-nome">Faísca</span>
-    <span class="marca-sub">desafios micro:bit</span>
+    <span class="marca-icone-caixa" id="marcaIcone"></span>
+    <span class="marca-nome" id="marcaNome"></span>
+    <span class="marca-sub" id="marcaSub"></span>
   </div>
   <nav class="caminho" id="caminho" aria-label="Desafios"></nav>
   <div class="ligacao">
@@ -49,19 +50,19 @@
       <button type="button" class="btn btn-texto" id="btnLimparTudo">Começar de novo</button>
     </div>
     <div id="blocos" class="blocos"></div>
-    <section class="gabi" id="gabi" aria-label="Gabi, a capivara da gambiarra">
-      <button type="button" class="gabi-avatar" id="gabiAvatar" aria-expanded="true" aria-label="Esconder a Gabi">
-        <img id="gabiImg" src="img/gabi/01_boas_vindas.png" alt="Gabi">
+    <section class="tutor" id="tutor" aria-label="Mascote">
+      <button type="button" class="tutor-avatar" id="tutorAvatar" aria-expanded="true" aria-label="Esconder a mascote">
+        <img id="tutorImg" src="" alt="">
       </button>
-      <div class="gabi-balao" id="gabiBalao">
-        <div class="gabi-cabeca"><span class="gabi-nome">Gabi</span><span class="gabi-nivel" id="gabiNivel" hidden></span></div>
-        <p class="gabi-texto" id="gabiTexto" role="status" aria-live="polite"></p>
+      <div class="tutor-balao" id="tutorBalao">
+        <div class="tutor-cabeca"><span class="tutor-nome" id="tutorNome"></span><span class="tutor-nivel" id="tutorNivel" hidden></span></div>
+        <p class="tutor-texto" id="tutorTexto" role="status" aria-live="polite"></p>
       </div>
-      <div class="gabi-acoes">
-        <button type="button" class="btn btn-escuro" id="gabiAjuda">Ajuda</button>
-        <button type="button" class="btn btn-texto" id="gabiGambiarra" hidden>Ajudar a Gabi</button>
-        <button type="button" class="btn btn-texto" id="gabiVoltar" hidden>Voltar ao meu programa</button>
-        <button type="button" class="gabi-fechar" id="gabiFechar" aria-label="Esconder a Gabi">Esconder</button>
+      <div class="tutor-acoes">
+        <button type="button" class="btn btn-escuro" id="tutorAjuda">Ajuda</button>
+        <button type="button" class="btn btn-texto" id="tutorGambiarra" hidden></button>
+        <button type="button" class="btn btn-texto" id="tutorVoltar" hidden>Voltar ao meu programa</button>
+        <button type="button" class="tutor-fechar" id="tutorFechar" aria-label="Esconder a mascote">Esconder</button>
       </div>
     </section>
   </section>
@@ -69,7 +70,7 @@
 
 <div class="festa" id="festa" hidden>
   <div class="festa-cartao" role="dialog" aria-modal="true" aria-labelledby="festaTitulo">
-    <img class="festa-gabi" id="festaGabi" src="img/gabi/06_a_celebrar.png" alt="Gabi a celebrar">
+    <img class="festa-mascote" id="festaMascote" src="" alt="">
     <h2 id="festaTitulo">Conseguiste!</h2>
     <p id="festaTexto">Desbloqueaste blocos novos.</p>
     <p class="festa-extra" id="festaExtra" hidden></p>
@@ -104,10 +105,10 @@
 <script src="js/motor.js"></script>
 <script src="js/ble.js"></script>
 <script src="js/desafios.js"></script>
-<script src="js/gabi-analise.js"></script>
-<script src="js/gabi-regras.js"></script>
-<script src="js/gabi-motor.js"></script>
-<script src="js/gabi-ui.js"></script>
+<script src="js/tutor-analise.js"></script>
+<script>Faisca.carregarPacote();</script>
+<script src="js/tutor-motor.js"></script>
+<script src="js/tutor-ui.js"></script>
 <script src="js/hex.js"></script>
 <script src="js/app.js"></script>
 </body>
