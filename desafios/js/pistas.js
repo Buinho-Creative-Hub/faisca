@@ -61,6 +61,11 @@
     return a.eventos.filter(e => e.chave === chave);
   }
   const est = (p, d) => Array.isArray(p) ? p : [d, p];
+  // «se … então … senão» e «se … então» contam os dois como «se»
+  const variantes = tipo => tipo === 'mk_se' || tipo === 'mk_se_entao' ? ['mk_se', 'mk_se_entao'] : [tipo];
+  const temTipo = (e, tipo) => variantes(tipo).some(t => A().tem(e, t));
+  const blocosTipo = (e, tipo) => variantes(tipo).flatMap(t => A().blocos(e, t));
+  const dentroTipo = (e, alvo, valor) => variantes(alvo).some(t => A().dentro(e, t, valor));
 
   const P = {
     nome, cor, nomeEvento, evs,
@@ -78,7 +83,7 @@
     bloco(chave, tipo, pergunta, corrigido) {
       const n = nome(tipo), ne = nomeEvento(chave);
       return P.regra('sem_' + tipo + '_' + chave.replace(/[^a-z0-9]/gi, '_'),
-        a => evs(a, chave).length > 0 && !evs(a, chave).some(e => A().tem(e, tipo)), [
+        a => evs(a, chave).length > 0 && !evs(a, chave).some(e => temTipo(e, tipo)), [
           pergunta,
           `Há um bloco ${cor(tipo)} que pode ajudar: «${n}».`,
           `Põe «${n}» dentro de «${ne}».`,
@@ -87,7 +92,7 @@
     valorEm(chave, alvo, valor, pergunta, corrigido) {
       const na = nome(alvo), nv = nome(valor);
       return P.regra('sem_' + valor + '_em_' + alvo,
-        a => evs(a, chave).some(e => A().blocos(e, alvo).length > 0) && !evs(a, chave).some(e => A().dentro(e, alvo, valor)), [
+        a => evs(a, chave).some(e => blocosTipo(e, alvo).length > 0) && !evs(a, chave).some(e => dentroTipo(e, alvo, valor)), [
           pergunta,
           `O «${na}» precisa de um valor. Procura o bloco ${cor(valor)} «${nv}».`,
           `Encaixa «${nv}» no buraco do «${na}».`,

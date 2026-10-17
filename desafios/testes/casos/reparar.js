@@ -78,7 +78,7 @@ module.exports = {
         [xml(E.botao('A', seq(tom(523)))), 'sem_sempre'],
         [xml(E.sempre(seq(tom(523)))), 'sem_se'],
         [xml(E.sempre(seq(seEntao(b('mk_escuro'), tom(523))))), 'sem_leitura'],
-        [xml(E.sempre(seq(seEntao(cmp(lerD('P0'), '==', 1))))), 'sem_tom'],
+        [xml(E.sempre(seq(seEntao(cmp(lerD('P0'), '==', 1))))), 'sem_mk_tom_sempre'],
         [G.bip, 'invertido'],
         [S.bip, null],
       ],
@@ -163,7 +163,7 @@ module.exports = {
     { // campainha nova
       ok: S.campainha,
       errado: [G.campainha, xml(E.pino('P1', seq(icone('Surprised'))))],
-      fazer: ['pino:P1', 'logo'], espera: 1500,
+      fazer: ['pino:P1', { esperar: 1300 }, 'logo'], espera: 1500,
       regras: [
         [G.campainha, 'sem_pino_'],
         [xml(E.pino('P1', seq(icone('Surprised')))), 'sem_som'],
@@ -218,7 +218,7 @@ module.exports = {
         [xml(E.botao('A', seq(tom(880)))), 'sem_sempre'],
         [xml(E.sempre(seq(tom(880)))), 'sem_se'],
         [xml(E.sempre(seq(seEntao(b('mk_escuro'), tom(880))))), 'sem_leitura'],
-        [xml(E.sempre(seq(seEntao(cmp(lerD('P0'), '==', 0))))), 'sem_tom'],
+        [xml(E.sempre(seq(seEntao(cmp(lerD('P0'), '==', 0))))), 'sem_mk_tom_sempre'],
         [G.porta, 'invertido'],
         [S.porta, null],
       ],
@@ -226,7 +226,7 @@ module.exports = {
     { // peluche com voz nova
       ok: S.peluche,
       errado: [G.peluche, xml(E.logo(seq(icone('Happy'))))],
-      fazer: ['logo', 'agitar'], espera: 1500,
+      fazer: ['logo', { esperar: 1300 }, 'agitar'], espera: 1500,
       regras: [
         [G.peluche, 'sem_logo'],
         [xml(E.logo(seq(icone('Happy')))), 'sem_som'],
@@ -238,7 +238,7 @@ module.exports = {
     { // contador do Repair Café
       ok: S.contador,
       errado: [G.contador, xml(E.botao('A', seq(mudar('contador', 1))), E.botao('B', seq(numero(3))))],
-      fazer: ['botao:A', 'botao:A', 'botao:A', 'botao:B'], espera: 600,
+      fazer: ['botao:A', 'botao:B', { esperar: 400 }, 'botao:A', 'botao:A', 'botao:B'], espera: 600,
       regras: [
         [xml(E.botao('B', seq(numero(v('contador'))))), 'sem_botao_A'],
         [G.contador, 'usa_definir'],
@@ -292,7 +292,7 @@ module.exports = {
     { // melhorar um brinquedo
       ok: S.brinquedo,
       errado: [G.brinquedo, xml(E.logo(seq(som('happy'))))],
-      fazer: ['logo', 'agitar'], espera: 1200,
+      fazer: ['logo', { esperar: 1300 }, 'agitar'], espera: 1200,
       regras: [
         [xml(E.botao('A', seq(som('happy')))), 'sem_logo'],
         [xml(E.logo(seq(som('happy'), servo('P0', 180)))), 'sem_luz'],
