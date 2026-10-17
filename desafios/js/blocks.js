@@ -103,7 +103,7 @@
   // ------------------------------------------------------------------ blocos
   const num = (nome) => ({ type: 'input_value', name: nome, check: 'Number' });
   const menu = (nome) => ({ type: 'input_value', name: nome });
-  const PAUSAS = [['100', '100'], ['200', '200'], ['300', '300'], ['500', '500'], ['1000', '1000'], ['2000', '2000']];
+  const PAUSAS = [['100', '100'], ['200', '200'], ['300', '300'], ['500', '500'], ['1000', '1000'], ['2000', '2000'], ['3000', '3000'], ['5000', '5000']];
   const BATIDAS = [['1', '1'], ['1/2', '0.5'], ['1/4', '0.25'], ['2', '2'], ['4', '4']];
   // Gestos (como o «em agitar» do MakeCode, com o menu aberto)
   const GESTOS = [['inclinado para a esquerda', 'left'], ['inclinado para a direita', 'right'], ['logotipo para cima', 'up'],

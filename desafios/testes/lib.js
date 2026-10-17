@@ -19,7 +19,7 @@ const txt = t => blk('mk_texto', campos('TXT', t));
 const b = tipo => blk(tipo);
 const v = nome => blk('mk_var', campos('VAR', nome));
 const conta = (a, op, c) => blk('mk_conta', campos('OP', op) + val('A', a) + val('B', c));
-const cmp = (a, op, c) => blk('mk_comparar', campos('OP', op.replace('<', '&lt;').replace('>', '&gt;')) + val('A', a) + val('B', c));
+const cmp = (a, op, c) => blk('mk_comparar', campos('OP', (op === '=' ? '==' : op).replace('<', '&lt;').replace('>', '&gt;')) + val('A', a) + val('B', c));
 const aleatorio = (a, c) => blk('mk_aleatorio', val('A', a) + val('B', c));
 const resto = (a, c) => blk('mk_resto', val('A', a) + val('B', c));
 const lerD = p => blk('mk_ler_digital', campos('P', p));
