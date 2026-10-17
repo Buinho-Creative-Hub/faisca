@@ -1,5 +1,5 @@
 // Casos de teste da missão «Citizen sensing» (um por desafio com validação, pela ordem).
-const { xml, E, seq, solto, b, v, num, conta, cmp, lerA, icone, limpar, pausa, tom, digital, numero, grafico, definir, mudar, registar, se, seEntao } = require('../lib');
+const { xml, E, seq, solto, b, v, num, conta, cmp, lerA, icone, limpar, pausa, tom, som, digital, numero, texto, grafico, definir, mudar, registar, se, seEntao } = require('../lib');
 
 // soluções
 const ok = {
@@ -25,9 +25,7 @@ const ok = {
 
 const somAltoBaixo = [{ som: 230 }, { esperar: 400 }, { som: 10 }, { esperar: 400 }];
 
-module.exports = {
-  missao: 'citizen-sensing',
-  casos: [
+const ANTIGOS = [
     // ============ Nível 1
     {
       ok: ok.luz,
@@ -288,5 +286,336 @@ module.exports = {
         [ok.silencio, null],
       ],
     },
-  ],
+];
+
+// ============================================================ projetos (7–11 de cada nível)
+const pausaVar = nome => ['<block type="mk_pausa"><value name="MS"><block type="mk_var"><field name="VAR">' + nome + '</field></block></value>', '</block>'];
+const L = b('mk_luz'), TP = b('mk_temperatura'), S = b('mk_som_nivel');
+
+// ---- nível 1
+const pA = seq(texto('LUZ'), numero(L)), pB = seq(texto('TEMP'), numero(TP)), pL = seq(texto('SOM'), numero(S));
+const okPainel = xml(E.botao('A', pA), E.botao('B', pB), E.logo(pL));
+const okRelatorio = xml(E.botao('AB', seq(numero(L), numero(TP), numero(S))));
+const grafLuz = () => E.sempre(seq(grafico(L, 255)));
+const okOuvir = xml(grafLuz(), E.logo(seq(tom(L, 0.25))));
+const okRitmo = xml(E.sempre(seq(numero(TP), pausa(1000), grafico(L, 255), pausa(1000))));
+const okSirene = xml(E.sempre(seq(grafico(S, 255))), E.somalto(seq(som('mysterious'))));
+const N1 = [
+  {
+    ok: okPainel,
+    errado: [
+      xml(E.botao('A', seq(numero(L), texto('LUZ'))), E.botao('B', pB), E.logo(seq(texto('SOM'), numero(L)))),
+      xml(E.botao('A', seq(numero(L))), E.botao('B', seq(numero(TP))), E.logo(seq(numero(S)))),
+    ],
+    fazer: [{ luz: 200 }, 'botao:A', { esperar: 4300 }, { temperatura: 30 }, 'botao:B', { esperar: 4300 }, { som: 180 }, 'logo'],
+    espera: 4500,
+    regras: [
+      [xml(E.botao('B', pB)), 'sem_botao_A'],
+      [xml(E.botao('A', pA)), 'sem_botao_B'],
+      [xml(E.botao('A', pA), E.botao('B', pB)), 'sem_logo'],
+      [xml(E.botao('A', seq(texto('LUZ'), numero(TP))), E.botao('B', pB), E.logo(pL)), 'sensor_trocado'],
+      [xml(E.botao('A', seq(texto('LUZ'))), E.botao('B', pB), E.logo(pL)), 'sem_numero'],
+      [xml(E.botao('A', seq(numero(L))), E.botao('B', pB), E.logo(pL)), 'sem_legenda'],
+      [xml(E.botao('A', seq(numero(L), texto('LUZ'))), E.botao('B', pB), E.logo(pL)), 'legenda_depois'],
+      [okPainel, null],
+    ],
+  },
+  {
+    ok: okRelatorio,
+    errado: [xml(E.botao('AB', seq(numero(L), numero(L), numero(S)))), xml(E.botao('AB', seq(numero(TP), numero(L), numero(S))))],
+    fazer: [{ luz: 150 }, { temperatura: 27 }, { som: 90 }, 'botao:AB'],
+    espera: 6500,
+    regras: [
+      [xml(E.botao('A', seq(numero(L)))), 'sem_botao_AB'],
+      [xml(E.botao('AB', ''), solto(numero(L))), 'fora_botao_AB'],
+      [xml(E.botao('AB', seq(icone('Happy')))), 'sem_mk_mostrar_numero_botao_AB'],
+      [xml(E.botao('AB', seq(numero(TP), numero(S)))), 'falta_luz'],
+      [xml(E.botao('AB', seq(numero(L), numero(S)))), 'falta_temperatura'],
+      [xml(E.botao('AB', seq(numero(L), numero(TP)))), 'falta_som'],
+      [xml(E.botao('AB', seq(numero(TP), numero(L), numero(S)))), 'ordem_trocada'],
+      [okRelatorio, null],
+    ],
+  },
+  {
+    ok: okOuvir,
+    errado: [xml(grafLuz(), E.logo(seq(tom(S, 0.25)))), xml(grafLuz(), E.logo(seq(tom(440)))), xml(E.logo(seq(tom(L, 0.25))))],
+    fazer: [{ luz: 200 }, { esperar: 300 }, 'logo', { esperar: 500 }, { luz: 60 }, { esperar: 300 }, 'logo'],
+    espera: 800,
+    regras: [
+      [xml(E.logo(seq(tom(L, 0.25)))), 'sem_sempre'],
+      [xml(E.sempre(seq(numero(L))), E.logo(seq(tom(L, 0.25)))), 'sem_mk_grafico_sempre'],
+      [xml(E.sempre(seq(grafico(S, 255)))), 'sem_mk_luz_em_mk_grafico'],
+      [xml(E.sempre(seq(grafico(L, 25)))), 'max_errado'],
+      [xml(grafLuz()), 'sem_logo'],
+      [xml(grafLuz(), E.logo(seq(icone('Happy')))), 'sem_mk_tom_logo'],
+      [xml(grafLuz(), E.logo(seq(tom(262)))), 'sem_mk_luz_em_mk_tom'],
+      [okOuvir, null],
+    ],
+  },
+  {
+    ok: okRitmo,
+    errado: [xml(E.sempre(seq(numero(TP), pausa(1000), grafico(L, 255)))), xml(E.sempre(seq(grafico(L, 255), pausa(1000))))],
+    fazer: [{ temperatura: 30 }, { esperar: 4000 }, { luz: 220 }, { esperar: 4000 }],
+    espera: 800,
+    regras: [
+      [xml(E.botao('A', seq(numero(TP)))), 'sem_sempre'],
+      [xml(E.sempre(seq(grafico(L, 255), pausa(1000)))), 'sem_mk_mostrar_numero_sempre'],
+      [xml(E.sempre(seq(numero(L), pausa(1000), grafico(L, 255), pausa(1000)))), 'sem_mk_temperatura_em_mk_mostrar_numero'],
+      [xml(E.sempre(seq(numero(TP), pausa(1000)))), 'sem_mk_grafico_sempre'],
+      [xml(E.sempre(seq(numero(TP), pausa(1000), grafico(S, 255), pausa(1000)))), 'sem_mk_luz_em_mk_grafico'],
+      [xml(E.sempre(seq(numero(TP), pausa(1000), grafico(L, 100), pausa(1000)))), 'max_errado'],
+      [xml(E.sempre(seq(numero(TP), pausa(1000), grafico(L, 255)))), 'sem_pausa_grafico'],
+      [okRitmo, null],
+    ],
+  },
+  {
+    ok: okSirene,
+    errado: [xml(E.sempre(seq(grafico(S, 255))), E.somalto(seq(icone('Surprised')))), xml(E.somalto(seq(som('mysterious'))))],
+    fazer: [{ som: 200 }, { esperar: 300 }, { som: 30 }, { esperar: 300 }, 'somalto'],
+    espera: 1500,
+    regras: [
+      [xml(E.somalto(seq(som('mysterious')))), 'sem_sempre'],
+      [xml(E.sempre(seq(numero(S)))), 'sem_mk_grafico_sempre'],
+      [xml(E.sempre(seq(grafico(L, 255)))), 'sem_mk_som_nivel_em_mk_grafico'],
+      [xml(E.sempre(seq(grafico(S, 128)))), 'max_errado'],
+      [xml(E.sempre(seq(grafico(S, 255)))), 'sem_somalto'],
+      [xml(E.sempre(seq(grafico(S, 255))), E.somalto(seq(icone('Surprised')))), 'sem_sirene'],
+      [okSirene, null],
+    ],
+  },
+];
+
+// ---- nível 2
+const tres = (n1, n2, c1, c2, c3) => E.sempre(seq(se(cmp(S, '>', n1), [icone(c1)], [se(cmp(S, '>', n2), [icone(c2)], [icone(c3)])])));
+const okTres = xml(tres(170, 80, 'Sad', 'Surprised', 'Happy'));
+const sala = (n1, x2, c1, c2, c3) => E.sempre(seq(se(cmp(TP, '>', n1), [icone(c1)], [se(cmp(x2, '>', 128), [icone(c2)], [icone(c3)])])));
+const okSala = xml(sala(25, S, 'Surprised', 'Sad', 'Happy'));
+const corredor = (...ins) => E.somalto(seq(...ins));
+const okLuzSom = seq(digital('P2', 1), pausa(2000), digital('P2', 0));
+const okCorredor = xml(corredor(digital('P2', 1), pausa(2000), digital('P2', 0), mudar('contador', 1)), E.botao('A', seq(numero(v('contador')))));
+const contaSom = () => E.somalto(seq(mudar('contador', 1)));
+const vigia = (c1, c2) => E.sempre(seq(se(cmp(v('contador'), '>', 5), [icone(c1)], [icone(c2)])));
+const okBarulhos = xml(contaSom(), vigia('Sad', 'Happy'), E.botao('A', seq(definir('contador', 0))));
+const ini128 = () => E.inicio(seq(definir('medida', 128)));
+const aOk = () => E.botao('A', seq(mudar('medida', 10), numero(v('medida'))));
+const bOk = () => E.botao('B', seq(mudar('medida', -10), numero(v('medida'))));
+const vigiaMedida = () => E.sempre(seq(se(cmp(S, '>', v('medida')), [icone('Sad')], [icone('Happy')])));
+const okVotado = xml(ini128(), aOk(), bOk(), vigiaMedida());
+const seteSom = ['somalto', 'somalto', 'somalto', 'somalto', 'somalto', 'somalto', 'somalto'];
+const N2 = [
+  {
+    ok: okTres,
+    errado: [xml(tres(80, 170, 'Surprised', 'Sad', 'Happy')), xml(E.sempre(seq(se(cmp(S, '>', 128), [icone('Sad')], [icone('Happy')]))))],
+    fazer: [{ som: 230 }, { esperar: 400 }, { som: 120 }, { esperar: 400 }, { som: 20 }, { esperar: 400 }],
+    regras: [
+      [xml(E.botao('A', seq(icone('Sad')))), 'sem_sempre'],
+      [xml(E.sempre(seq(icone('Sad')))), 'sem_mk_se_sempre'],
+      [xml(E.sempre(seq(se(cmp(L, '>', 170), [icone('Sad')], [icone('Happy')])))), 'sem_mk_som_nivel_em_mk_se'],
+      [xml(E.sempre(seq(se(cmp(S, '>', 170), [icone('Sad')], [icone('Happy')])))), 'so_duas_caras'],
+      [xml(tres(170, 80, 'Sad', 'Happy', 'Happy')), 'sem_atencao'],
+      [xml(tres(80, 170, 'Surprised', 'Sad', 'Happy')), 'limites_ao_contrario'],
+      [xml(tres(170, 80, 'Happy', 'Surprised', 'Sad')), 'cara_trocada'],
+      [okTres, null],
+    ],
+  },
+  {
+    ok: okSala,
+    errado: [xml(E.sempre(seq(se(cmp(TP, '>', 25), [icone('Surprised')], [icone('Happy')])))), xml(E.sempre(seq(se(cmp(S, '>', 128), [icone('Sad')], [icone('Happy')]))))],
+    fazer: [{ temperatura: 30 }, { esperar: 400 }, { temperatura: 20 }, { esperar: 300 }, { som: 220 }, { esperar: 400 }, { som: 15 }, { esperar: 400 }],
+    regras: [
+      [xml(E.botao('A', seq(icone('Happy')))), 'sem_sempre'],
+      [xml(E.sempre(seq(icone('Happy')))), 'sem_mk_se_sempre'],
+      [xml(E.sempre(seq(se(cmp(S, '>', 128), [icone('Sad')], [icone('Happy')])))), 'sem_calor'],
+      [xml(E.sempre(seq(se(cmp(TP, '>', 25), [icone('Surprised')], [icone('Happy')])))), 'so_uma_pergunta'],
+      [xml(sala(25, L, 'Surprised', 'Sad', 'Happy')), 'sem_barulho'],
+      [xml(sala(25, S, 'Happy', 'Sad', 'Happy')), 'falta_cara'],
+      [xml(sala(0, S, 'Surprised', 'Sad', 'Happy')), 'limite_zero'],
+      [okSala, null],
+    ],
+  },
+  {
+    ok: okCorredor,
+    errado: [
+      xml(corredor(digital('P2', 1), digital('P2', 0), pausa(2000), mudar('contador', 1)), E.botao('A', seq(numero(v('contador'))))),
+      xml(corredor(digital('P2', 1), pausa(2000), digital('P2', 0)), E.botao('A', seq(numero(v('contador'))))),
+    ],
+    fazer: ['somalto', { esperar: 2600 }, 'somalto', { esperar: 2600 }, 'botao:A'],
+    espera: 1200,
+    regras: [
+      [xml(E.botao('A', seq(numero(v('contador'))))), 'sem_somalto'],
+      [xml(corredor(mudar('contador', 1))), 'sem_ligar'],
+      [xml(corredor(digital('P2', 1))), 'nunca_apaga'],
+      [xml(corredor(digital('P2', 1), digital('P2', 0), pausa(2000), mudar('contador', 1))), 'sem_espera'],
+      [xml(corredor(digital('P2', 0), pausa(2000), digital('P2', 1))), 'apaga_antes'],
+      [xml(E.somalto(okLuzSom)), 'sem_mk_var_mudar_somalto'],
+      [xml(corredor(digital('P2', 1), pausa(2000), digital('P2', 0), mudar('contador', 1))), 'sem_botao_A'],
+      [xml(corredor(digital('P2', 1), pausa(2000), digital('P2', 0), mudar('contador', 1)), E.botao('A', seq(icone('Happy')))), 'sem_mk_mostrar_numero_botao_A'],
+      [xml(corredor(digital('P2', 1), pausa(2000), digital('P2', 0), mudar('contador', 1)), E.botao('A', seq(numero(5)))), 'sem_mk_var_em_mk_mostrar_numero'],
+      [okCorredor, null],
+    ],
+  },
+  {
+    ok: okBarulhos,
+    errado: [xml(contaSom(), vigia('Sad', 'Happy'), E.botao('A', seq(mudar('contador', 0)))), xml(contaSom(), vigia('Sad', 'Happy'))],
+    fazer: [...seteSom, { esperar: 300 }, 'botao:A'],
+    espera: 800,
+    regras: [
+      [xml(vigia('Sad', 'Happy')), 'sem_somalto'],
+      [xml(E.somalto(seq(icone('Sad')))), 'sem_mk_var_mudar_somalto'],
+      [xml(contaSom()), 'sem_sempre'],
+      [xml(contaSom(), E.sempre(seq(icone('Sad')))), 'sem_mk_se_sempre'],
+      [xml(contaSom(), E.sempre(seq(se(cmp(S, '>', 5), [icone('Sad')], [icone('Happy')])))), 'sem_mk_var_em_mk_se'],
+      [xml(contaSom(), vigia('Happy', 'Sad')), 'caras_trocadas'],
+      [xml(contaSom(), vigia('Sad', 'Happy')), 'sem_botao_A'],
+      [xml(contaSom(), vigia('Sad', 'Happy'), E.botao('A', seq(mudar('contador', 0)))), 'nao_recomeca'],
+      [okBarulhos, null],
+    ],
+  },
+  {
+    ok: okVotado,
+    errado: [
+      xml(ini128(), aOk(), E.botao('B', seq(mudar('medida', 10), numero(v('medida')))), vigiaMedida()),
+      xml(ini128(), aOk(), bOk(), E.sempre(seq(se(cmp(S, '>', 128), [icone('Sad')], [icone('Happy')])))),
+    ],
+    fazer: ['botao:A', { esperar: 2300 }, 'botao:A', { esperar: 2300 }, 'botao:B', { esperar: 2300 }, { som: 133 }, { esperar: 400 }, { som: 250 }, { esperar: 400 }, { som: 5 }, { esperar: 400 }],
+    regras: [
+      [xml(E.botao('A', seq(mudar('medida', 10)))), 'sem_inicio'],
+      [xml(E.inicio(seq(numero(5)))), 'sem_mk_var_definir_inicio'],
+      [xml(ini128()), 'sem_botao_A'],
+      [xml(ini128(), E.botao('A', seq(numero(v('medida'))))), 'sem_mk_var_mudar_botao_A'],
+      [xml(ini128(), E.botao('A', seq(mudar('medida', 10)))), 'sem_mk_mostrar_numero_botao_A'],
+      [xml(ini128(), E.botao('A', seq(mudar('medida', 10), numero(5)))), 'a_mostra'],
+      [xml(ini128(), aOk()), 'sem_botao_B'],
+      [xml(ini128(), aOk(), E.botao('B', seq(mudar('medida', 10), numero(v('medida'))))), 'b_sobe'],
+      [xml(ini128(), aOk(), bOk()), 'sem_sempre'],
+      [xml(ini128(), aOk(), bOk(), E.sempre(seq(se(cmp(S, '>', 128), [icone('Sad')], [icone('Happy')])))), 'sem_mk_var_em_mk_se'],
+      [okVotado, null],
+    ],
+  },
+];
+
+// ---- nível 3
+const ini1000 = () => E.inicio(seq(definir('medida', 1000)));
+const estacaoOk = () => E.sempre(seq(registar('luz', L), registar('temperatura', TP), pausaVar('medida')));
+const aIntervalo = () => E.botao('A', seq(mudar('medida', 1000), numero(v('medida'))));
+const okIntervalo = xml(ini1000(), estacaoOk(), aIntervalo());
+const bMedia = () => E.botao('B', seq(mudar('contador', 1), mudar('medida', L), seEntao(cmp(L, '>', v('recorde')), definir('recorde', L))));
+const aMedia = () => E.botao('A', seq(numero(conta(v('medida'), '/', v('contador'))), pausa(500), numero(v('recorde'))));
+const okMedia = xml(bMedia(), aMedia());
+const sitio = (ev, nome, x = TP, cont = true) => ev(seq(registar(nome, x), ...(cont ? [mudar('contador', 1)] : [])));
+const sA = (n = 'porta', x, c) => sitio(c2 => E.botao('A', c2), n, x, c), sB = (n = 'patio', x, c) => sitio(c2 => E.botao('B', c2), n, x, c), sL = (n = 'sala', x, c) => sitio(c2 => E.logo(c2), n, x, c);
+const totalAB = () => E.botao('AB', seq(numero(v('contador'))));
+const okTres3 = xml(sA(), sB(), sL(), totalAB());
+const somAlto = (sim, nao) => se(cmp(S, '>', 128), sim, nao);
+const okPaciente = xml(E.sempre(seq(somAlto([mudar('contador', 1)], [definir('contador', 0)]), seEntao(cmp(v('contador'), '>', 4), tom(), icone('Sad')), pausa(200))));
+const P1 = lerA('P1');
+const okRega = xml(E.sempre(seq(registar('humidade', P1), se(cmp(P1, '<', 300), [tom(), icone('Sad')], [icone('Happy')]), pausa(1000))));
+const N3 = [
+  {
+    ok: okIntervalo,
+    errado: [
+      xml(ini1000(), E.sempre(seq(registar('luz', L), registar('temperatura', TP), pausa(1000))), aIntervalo()),
+      xml(ini1000(), E.sempre(seq(registar('luz', L), pausaVar('medida'))), aIntervalo()),
+    ],
+    fazer: [{ esperar: 3500 }, 'botao:A', { esperar: 6000 }],
+    espera: 500,
+    regras: [
+      [xml(estacaoOk()), 'sem_inicio'],
+      [xml(E.inicio(seq(numero(1)))), 'sem_mk_var_definir_inicio'],
+      [xml(ini1000()), 'sem_sempre'],
+      [xml(ini1000(), E.sempre(seq(pausaVar('medida')))), 'sem_mk_registar_sempre'],
+      [xml(ini1000(), E.sempre(seq(registar('luz', L), pausaVar('medida')))), 'falta_luz_ou_temp'],
+      [xml(ini1000(), E.sempre(seq(registar('luz', L), registar('temperatura', TP)))), 'sem_mk_pausa_sempre'],
+      [xml(ini1000(), E.sempre(seq(registar('luz', L), registar('temperatura', TP), pausa(1000)))), 'pausa_fixa'],
+      [xml(ini1000(), estacaoOk()), 'sem_botao_A'],
+      [xml(ini1000(), estacaoOk(), E.botao('A', seq(numero(v('medida'))))), 'sem_mk_var_mudar_botao_A'],
+      [xml(ini1000(), estacaoOk(), E.botao('A', seq(mudar('medida', 1000), numero(5)))), 'sem_mk_var_em_mk_mostrar_numero'],
+      [okIntervalo, null],
+    ],
+  },
+  {
+    ok: okMedia,
+    errado: [
+      xml(E.botao('B', seq(mudar('contador', 1), mudar('medida', L))), aMedia()),
+      xml(bMedia(), E.botao('A', seq(numero(conta(v('medida'), '/', v('contador')))))),
+      xml(bMedia(), E.botao('A', seq(numero(v('medida')), pausa(500), numero(v('recorde'))))),
+    ],
+    fazer: [{ luz: 100 }, 'botao:B', { luz: 200 }, 'botao:B', { luz: 60 }, 'botao:B', 'botao:A'],
+    espera: 5000,
+    regras: [
+      [xml(E.botao('A', seq(numero(v('recorde'))))), 'sem_botao_B'],
+      [xml(E.botao('B', seq(icone('Happy')))), 'sem_mk_var_mudar_botao_B'],
+      [xml(E.botao('B', seq(mudar('contador', 1), mudar('medida', 5)))), 'soma_sem_luz'],
+      [xml(E.botao('B', seq(mudar('medida', L)))), 'sem_contar'],
+      [xml(E.botao('B', seq(mudar('contador', 1), mudar('medida', L)))), 'sem_mk_se_entao_botao_B'],
+      [xml(E.botao('B', seq(mudar('contador', 1), mudar('medida', L), seEntao(cmp(L, '>', v('recorde')), definir('recorde', 0))))), 'recorde_sem_luz'],
+      [xml(bMedia()), 'sem_botao_A'],
+      [xml(bMedia(), E.botao('A', seq(numero(v('recorde'))))), 'sem_media'],
+      [xml(bMedia(), E.botao('A', seq(numero(conta(v('medida'), '/', v('contador')))))), 'sem_maximo'],
+      [okMedia, null],
+    ],
+  },
+  {
+    ok: okTres3,
+    errado: [xml(sA(), sB(), sL('porta'), totalAB()), xml(sA(), sB(), sL())],
+    fazer: [{ temperatura: 18 }, 'botao:A', { temperatura: 24 }, 'botao:B', { temperatura: 21 }, 'logo', { esperar: 300 }, 'botao:AB'],
+    espera: 1500,
+    regras: [
+      [xml(sB(), sL()), 'sem_botao_A'],
+      [xml(sA()), 'sem_botao_B'],
+      [xml(sA(), sB()), 'sem_logo'],
+      [xml(sA(), sB(), E.logo(seq(mudar('contador', 1)))), 'sem_registo'],
+      [xml(sA(), sB(), sL('sala', L)), 'sem_temperatura'],
+      [xml(sA(), sB(), sL('porta'), totalAB()), 'nomes_repetidos'],
+      [xml(sA('porta', TP, false), sB('patio', TP, false), sL('sala', TP, false)), 'sem_contar'],
+      [xml(sA(), sB(), sL()), 'sem_botao_AB'],
+      [xml(sA(), sB(), sL(), E.botao('AB', seq(icone('Happy')))), 'sem_mk_mostrar_numero_botao_AB'],
+      [xml(sA(), sB(), sL(), E.botao('AB', seq(numero(3)))), 'sem_mk_var_em_mk_mostrar_numero'],
+      [okTres3, null],
+    ],
+  },
+  {
+    ok: okPaciente,
+    errado: [
+      xml(E.sempre(seq(somAlto([tom(), icone('Sad')], [limpar()]), pausa(200)))),
+      xml(E.sempre(seq(somAlto([mudar('contador', 1)], [definir('contador', 0)]), seEntao(cmp(v('contador'), '>', 4), tom(), icone('Sad'))))),
+    ],
+    fazer: [{ som: 230 }, { esperar: 150 }, { som: 10 }, { esperar: 1200 }, { som: 230 }, { esperar: 2500 }, { som: 10 }],
+    espera: 600,
+    regras: [
+      [xml(E.botao('A', seq(tom()))), 'sem_sempre'],
+      [xml(E.sempre(seq(tom()))), 'sem_mk_se_sempre'],
+      [xml(E.sempre(seq(somAlto([tom(), icone('Sad')], [limpar()]), pausa(200)))), 'alarme_imediato'],
+      [xml(E.sempre(seq(somAlto([icone('Sad')], [limpar()]), pausa(200)))), 'sem_contar'],
+      [xml(E.sempre(seq(somAlto([mudar('contador', 1)], [limpar()]), seEntao(cmp(v('contador'), '>', 4), tom()), pausa(200)))), 'sem_recomecar'],
+      [xml(E.sempre(seq(somAlto([mudar('contador', 1)], [definir('contador', 0)]), pausa(200)))), 'sem_alarme'],
+      [xml(E.sempre(seq(somAlto([mudar('contador', 1)], [definir('contador', 0)]), seEntao(cmp(v('contador'), '>', 4), tom(), icone('Sad'))))), 'sem_mk_pausa_sempre'],
+      [okPaciente, null],
+    ],
+  },
+  {
+    ok: okRega,
+    errado: [
+      xml(E.sempre(seq(registar('humidade', L), se(cmp(P1, '<', 300), [tom(), icone('Sad')], [icone('Happy')]), pausa(1000)))),
+      xml(E.sempre(seq(registar('humidade', P1), se(cmp(P1, '<', 300), [icone('Sad')], [icone('Happy')]), pausa(1000)))),
+    ],
+    fazer: [{ 'analogico:P1': 800 }, { esperar: 2000 }, { 'analogico:P1': 100 }, { esperar: 2500 }, { 'analogico:P1': 700 }, { esperar: 2000 }],
+    espera: 500,
+    regras: [
+      [xml(E.botao('A', seq(registar('humidade', P1)))), 'sem_sempre'],
+      [xml(E.sempre(seq(pausa(1000)))), 'sem_mk_registar_sempre'],
+      [xml(E.sempre(seq(registar('humidade', L), pausa(1000)))), 'sem_leitura_reg'],
+      [xml(E.sempre(seq(registar('humidade', P1), pausa(1000)))), 'sem_mk_se_sempre'],
+      [xml(E.sempre(seq(registar('humidade', P1), se(cmp(L, '<', 300), [tom()], [icone('Happy')]), pausa(1000)))), 'sem_mk_ler_analogico_em_mk_se'],
+      [xml(E.sempre(seq(registar('humidade', P1), se(cmp(P1, '>', 300), [tom()], [icone('Happy')]), pausa(1000)))), 'sede_trocada'],
+      [xml(E.sempre(seq(registar('humidade', P1), se(cmp(P1, '<', 300), [icone('Sad')], [icone('Happy')]), pausa(1000)))), 'sem_mk_tom_sempre'],
+      [xml(E.sempre(seq(registar('humidade', P1), se(cmp(P1, '<', 300), [tom(), icone('Sad')], [icone('Happy')])))), 'sem_mk_pausa_sempre'],
+      [okRega, null],
+    ],
+  },
+];
+
+module.exports = {
+  missao: 'citizen-sensing',
+  casos: [...ANTIGOS.slice(0, 6), ...N1, ...ANTIGOS.slice(6, 12), ...N2, ...ANTIGOS.slice(12, 18), ...N3],
 };

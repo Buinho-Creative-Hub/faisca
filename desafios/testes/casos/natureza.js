@@ -1,5 +1,5 @@
 // Casos de teste da missão «Natureza» (um por desafio com validação, pela ordem).
-const { xml, E, seq, b, v, conta, cmp, lerA, icone, tom, pausa, digital, numero, grafico, mudar, definir, servo, registar, se, seEntao } = require('../lib');
+const { xml, E, seq, b, v, conta, cmp, lerA, icone, tom, som, pausa, digital, numero, texto, grafico, mudar, definir, servo, registar, repetir, se, seEntao, solto } = require('../lib');
 
 const P1 = lerA('P1');
 // soluções e gambiarras reutilizadas nas regras
@@ -45,6 +45,40 @@ const sol = {
 };
 const recorde = () => xml(sol.recordeSempre(), E.botao('A', seq(numero(v('recorde')))));
 const recordeGambiarra = () => xml(E.sempre(seq(definir('recorde', b('mk_temperatura')))), E.botao('A', seq(numero(v('recorde')))));
+
+
+// ---------------------------------------------------------------- projetos 7–11
+const TEMP = b('mk_temperatura'), LUZ = b('mk_luz'), P0 = lerA('P0');
+const caderno = {
+  sol: () => xml(E.botao('A', seq(numero(LUZ))), E.botao('B', seq(numero(TEMP))), E.logo(seq(numero(P1)))),
+  gamb: () => xml(E.botao('A', seq(numero(LUZ))), E.botao('B', seq(numero(TEMP))), E.logo(seq(numero(LUZ)))),
+};
+const guia = {
+  sol: () => xml(E.botao('A', seq(icone('Happy'), som('giggle'))), E.botao('B', seq(icone('Asleep'), som('mysterious'))), E.logo(seq(icone('Surprised'), tom(523))), E.agitar(seq(icone('Sad'), som('spring')))),
+  gamb: () => xml(E.botao('A', seq(icone('Happy'), som('giggle'))), E.botao('B', seq(icone('Asleep'), som('mysterious'))), E.logo(seq(icone('Asleep'), som('mysterious'))), E.agitar(seq(icone('Surprised'), som('spring')))),
+};
+const passaros = {
+  A: () => E.botao('A', seq(repetir(3, icone('Happy'), pausa(200), icone('Surprised'), pausa(200)), tom(392), tom(440), tom(523))),
+  sol: () => xml(passaros.A(), E.botao('B', seq(tom(262), tom(294)))),
+  gamb: () => xml(E.botao('A', seq(repetir(3, icone('Happy'), icone('Surprised')), tom(392), tom(440), tom(523))), E.botao('B', seq(tom(262), tom(294)))),
+};
+const termo = corpo => xml(E.sempre(seq(corpo)));
+const rajadas = {
+  sol: () => xml(E.agitar(seq(mudar('contador', 1), icone('Surprised'))), E.botao('A', seq(numero(v('contador')))), E.botao('B', seq(definir('contador', 0), icone('Yes')))),
+  gamb: () => xml(E.agitar(seq(definir('contador', 1), icone('Surprised'))), E.botao('A', seq(numero(v('contador')))), E.botao('B', seq(definir('contador', 0), icone('Yes')))),
+};
+const horta2 = corpo => xml(E.sempre(seq(corpo)));
+const com3 = corpo => xml(E.sempre(seq(corpo)));
+const ninho2 = corpo => xml(E.sempre(seq(corpo)));
+const hotel = se5 => xml(E.pino('P1', seq(mudar('contador', 1), tom(523, 0.25), numero(v('contador')), se5)));
+const diario2 = (...corpo) => xml(E.inicio(seq(definir('contador', 0))), E.sempre(seq(...corpo)), E.botao('A', seq(numero(v('contador')))));
+const censo = vencedor => xml(E.botao('A', seq(mudar('contador', 1))), E.botao('B', seq(mudar('pontos', 1))),
+  E.botao('AB', seq(numero(conta(v('contador'), '+', v('pontos'))), vencedor)));
+const recSempre = () => E.sempre(seq(seEntao(cmp(TEMP, '>', v('recorde')), definir('recorde', TEMP)), seEntao(cmp(TEMP, '<', v('medida')), definir('medida', TEMP))));
+const recordes = certo => xml(E.inicio(seq(definir('recorde', TEMP), ...(certo ? [definir('medida', TEMP)] : []))), recSempre(),
+  E.botao('A', seq(numero(v('recorde')))), E.botao('B', seq(numero(v('medida')))));
+const rega2 = corpo => xml(E.sempre(seq(corpo)));
+const plantas = (a, bb) => xml(E.botao('A', seq(a)), E.botao('B', seq(bb)));
 
 module.exports = {
   missao: 'natureza',
@@ -121,6 +155,81 @@ module.exports = {
         [xml(E.sempre(seq(grafico(0, 1023)))), 'sem_pino'],
         [xml(E.sempre(seq(grafico(P1, 255)))), 'maximo'],
         [sol.horta(), null],
+      ],
+    },
+    // ---------------------------------------------------------------- Nível 1 · projetos (7–11)
+    { // Caderno de campo
+      ok: caderno.sol(),
+      errado: [caderno.gamb(), xml(E.botao('A', seq(numero(TEMP))), E.botao('B', seq(numero(LUZ))), E.logo(seq(numero(P1))))],
+      fazer: [{ luz: 120 }, { temperatura: 33 }, { 'analogico:P1': 640 }, 'botao:A', { esperar: 300 }, 'botao:B', { esperar: 300 }, 'logo'], espera: 600,
+      regras: [
+        [xml(), 'sem_a'],
+        [xml(E.botao('A', '')), 'sem_b'],
+        [xml(E.botao('A', ''), E.botao('B', '')), 'sem_logo'],
+        [xml(E.botao('A', ''), E.botao('B', ''), E.logo('')), 'sem_numero'],
+        [caderno.gamb(), 'trocados'],
+        [xml(E.botao('A', seq(numero(0))), E.botao('B', seq(numero(TEMP))), E.logo(seq(numero(P1)))), 'sem_luz'],
+        [xml(E.botao('A', seq(numero(LUZ))), E.botao('B', seq(numero(0))), E.logo(seq(numero(P1)))), 'sem_temp'],
+        [xml(E.botao('A', seq(numero(LUZ))), E.botao('B', seq(numero(TEMP))), E.logo(seq(numero(0)))), 'sem_humidade'],
+        [caderno.sol(), null],
+      ],
+    },
+    { // Guia sonoro dos bichos
+      ok: guia.sol(),
+      errado: [guia.gamb(), xml(E.botao('A', seq(icone('Happy'), som('giggle'))), E.botao('B', seq(icone('Asleep'), som('mysterious'))), E.logo(seq(icone('Surprised'), tom(523))), E.agitar(seq(icone('Sad'))))],
+      fazer: ['botao:A', { esperar: 900 }, 'botao:B', { esperar: 1100 }, 'logo', { esperar: 700 }, 'agitar'], espera: 1200,
+      regras: [
+        [xml(), 'nenhum'],
+        [xml(E.botao('A', seq(icone('Happy'), som('giggle')))), 'poucos'],
+        [xml(E.botao('A', seq(som('giggle'))), E.botao('B', seq(icone('Asleep'), som('mysterious'))), E.logo(seq(icone('Surprised'), tom(523))), E.agitar(seq(icone('Sad'), som('spring')))), 'sem_icone'],
+        [xml(E.botao('A', seq(icone('Happy'), som('giggle'))), E.botao('B', seq(icone('Asleep'))), E.logo(seq(icone('Surprised'), tom(523))), E.agitar(seq(icone('Sad'), som('spring')))), 'sem_som'],
+        [guia.gamb(), 'repetidos'],
+        [guia.sol(), null],
+      ],
+    },
+    { // Dois pássaros, dois cantos
+      ok: passaros.sol(),
+      errado: [passaros.gamb(), xml(passaros.A(), E.botao('B', seq(tom(392), tom(440))))],
+      fazer: ['botao:A', { esperar: 3200 }, 'botao:B'], espera: 1500,
+      regras: [
+        [xml(), 'sem_a'],
+        [xml(E.botao('A', seq(tom(392), tom(440), tom(523)))), 'sem_asas'],
+        [passaros.gamb(), 'asas_rapidas'],
+        [xml(E.botao('A', seq(repetir(3, icone('Happy'), pausa(200), icone('Surprised'), pausa(200)), tom(392)))), 'canto_curto'],
+        [xml(passaros.A()), 'sem_b'],
+        [xml(passaros.A(), E.botao('B', seq(tom(392), tom(440)))), 'mesmo_canto'],
+        [passaros.sol(), null],
+      ],
+    },
+    { // Termómetro do dia
+      ok: termo(se(b('mk_escuro'), [icone('Asleep')], [grafico(TEMP, 40)])),
+      errado: [termo(se(b('mk_escuro'), [icone('Asleep')], [grafico(TEMP, 255)])), termo(se(b('mk_escuro'), [icone('Asleep')], [grafico(LUZ, 40)]))],
+      fazer: [{ temperatura: 40 }, { esperar: 300 }, { temperatura: 8 }, { esperar: 300 }, { luz: 10 }, { esperar: 300 }], espera: 300,
+      regras: [
+        [xml(), 'sem_sempre'],
+        [termo(grafico(TEMP, 40)), 'sem_se'],
+        [termo(se(b('mk_escuro'), [icone('Asleep')], [icone('Happy')])), 'sem_grafico'],
+        [termo(se(b('mk_escuro'), [icone('Asleep')], [grafico(LUZ, 40)])), 'grafico_luz'],
+        [termo(se(b('mk_escuro'), [icone('Asleep')], [grafico(5, 40)])), 'sem_temp'],
+        [termo(se(b('mk_escuro'), [icone('Asleep')], [grafico(TEMP, 255)])), 'max_errado'],
+        [termo(se(b('mk_escuro'), [grafico(TEMP, 40)], [icone('Asleep')])), 'grafico_de_noite'],
+        [termo(se(b('mk_escuro'), [icone('Happy')], [grafico(TEMP, 40)])), 'sem_dormir'],
+        [termo(se(b('mk_escuro'), [icone('Asleep')], [grafico(TEMP, 40)])), null],
+      ],
+    },
+    { // Contador de rajadas
+      ok: rajadas.sol(),
+      errado: [rajadas.gamb(), xml(E.agitar(seq(mudar('contador', 1), icone('Surprised'))), E.botao('A', seq(numero(v('contador')))))],
+      fazer: ['agitar', { esperar: 300 }, 'agitar', { esperar: 300 }, 'agitar', { esperar: 300 }, 'botao:A', { esperar: 400 }, 'botao:B', { esperar: 300 }, 'agitar', { esperar: 300 }, 'botao:A'], espera: 600,
+      regras: [
+        [xml(), 'sem_agitar'],
+        [xml(E.agitar(seq(definir('contador', 1)))), 'definir_no_agitar'],
+        [xml(E.agitar(seq(icone('Surprised')))), 'sem_mudar'],
+        [xml(E.agitar(seq(mudar('contador', 1)))), 'sem_a'],
+        [xml(E.agitar(seq(mudar('contador', 1))), E.botao('A', seq(numero(0)))), 'sem_mostrar'],
+        [xml(E.agitar(seq(mudar('contador', 1))), E.botao('A', seq(numero(v('contador'))))), 'sem_b'],
+        [xml(E.agitar(seq(mudar('contador', 1))), E.botao('A', seq(numero(v('contador')))), E.botao('B', seq(icone('Yes')))), 'sem_zerar'],
+        [rajadas.sol(), null],
       ],
     },
     // ---------------------------------------------------------------- Nível 2 · Cuidar
@@ -204,6 +313,88 @@ module.exports = {
         [sol.corujas(), null],
       ],
     },
+    // ---------------------------------------------------------------- Nível 2 · projetos (7–11)
+    { // Horta inteligente
+      ok: horta2(se(cmp(P1, '<', 300), [icone('Sad'), digital('P2', 1)], [digital('P2', 0), se(b('mk_escuro'), [icone('Asleep')], [icone('Happy')])])),
+      errado: [horta2(se(cmp(P1, '<', 300), [icone('Sad'), digital('P2', 1)], [se(b('mk_escuro'), [icone('Asleep')], [icone('Happy')])])),
+        horta2(se(cmp(P1, '<', 300), [icone('Sad'), digital('P2', 1)], [digital('P2', 0), icone('Happy')]))],
+      fazer: [{ 'analogico:P1': 100 }, { esperar: 300 }, { 'analogico:P1': 800 }, { luz: 10 }, { esperar: 300 }, { luz: 200 }, { esperar: 300 }], espera: 300,
+      regras: [
+        [xml(), 'sem_sempre'],
+        [horta2(icone('Sad')), 'sem_se'],
+        [horta2(se(b('mk_escuro'), [icone('Asleep')], [icone('Happy')])), 'sem_humidade'],
+        [horta2(se(cmp(P1, '>', 300), [icone('Sad'), digital('P2', 1)], [digital('P2', 0), se(b('mk_escuro'), [icone('Asleep')], [icone('Happy')])])), 'ao_contrario'],
+        [horta2(se(cmp(P1, '<', 300), [icone('Sad')], [digital('P2', 0), se(b('mk_escuro'), [icone('Asleep')], [icone('Happy')])])), 'sem_led'],
+        [horta2(se(cmp(P1, '<', 300), [icone('Sad'), digital('P2', 1)], [se(b('mk_escuro'), [icone('Asleep')], [icone('Happy')])])), 'led_fica'],
+        [horta2(se(cmp(P1, '<', 300), [icone('Sad'), digital('P2', 1)], [digital('P2', 0), icone('Happy')])), 'sem_noite'],
+        [horta2(se(cmp(P1, '<', 300), [icone('Sad'), digital('P2', 1)], [digital('P2', 0), se(b('mk_escuro'), [icone('Happy')], [icone('Happy')])])), 'sem_dormir'],
+        [horta2(se(cmp(P1, '<', 300), [icone('Sad'), digital('P2', 1)], [digital('P2', 0), se(b('mk_escuro'), [icone('Asleep')], [icone('Happy')])])), null],
+      ],
+    },
+    { // Espantalho a sério
+      ok: xml(E.somalto(seq(icone('Surprised'), som('slide'), repetir(3, servo('P0', 0), pausa(300), servo('P0', 180), pausa(300)), icone('Asleep')))),
+      errado: [xml(E.somalto(seq(icone('Surprised'), som('slide'), repetir(3, servo('P0', 0), servo('P0', 180)), icone('Asleep')))),
+        xml(E.somalto(seq(icone('Surprised'), som('slide'), servo('P0', 0), pausa(300), servo('P0', 180), pausa(300))))],
+      fazer: ['somalto'], espera: 3200,
+      regras: [
+        [xml(), 'sem_som_alto'],
+        [xml(E.somalto(seq(som('slide')))), 'sem_espanto'],
+        [xml(E.somalto(seq(icone('Surprised')))), 'sem_grito'],
+        [xml(E.somalto(seq(icone('Surprised'), som('slide')))), 'sem_servo'],
+        [xml(E.somalto(seq(icone('Surprised'), som('slide'), servo('P0', 0), pausa(300), servo('P0', 180)))), 'sem_repetir'],
+        [xml(E.somalto(seq(icone('Surprised'), som('slide'), repetir(3, servo('P0', 180), pausa(300))))), 'um_lado'],
+        [xml(E.somalto(seq(icone('Surprised'), som('slide'), repetir(3, servo('P0', 0), servo('P0', 180)), icone('Asleep')))), 'sem_pausas'],
+        [xml(E.somalto(seq(icone('Surprised'), som('slide'), repetir(3, servo('P0', 0), pausa(300), servo('P0', 180), pausa(300)), icone('Asleep')))), null],
+      ],
+    },
+    { // Comedouro do amanhecer
+      ok: com3(se(cmp(LUZ, '<', 40), [servo('P0', 0), icone('Asleep')], [se(cmp(LUZ, '<', 150), [servo('P0', 90)], [servo('P0', 180), icone('Happy')])])),
+      errado: [com3(se(cmp(LUZ, '<', 40), [servo('P0', 0), icone('Asleep')], [servo('P0', 180), icone('Happy')])),
+        com3(se(cmp(LUZ, '<', 40), [servo('P0', 180), icone('Happy')], [se(cmp(LUZ, '<', 150), [servo('P0', 90)], [servo('P0', 0), icone('Asleep')])]))],
+      fazer: [{ luz: 10 }, { esperar: 300 }, { luz: 100 }, { esperar: 300 }, { luz: 220 }, { esperar: 300 }], espera: 300,
+      regras: [
+        [xml(), 'sem_sempre'],
+        [com3(servo('P0', 180)), 'sem_se'],
+        [com3(se(b('mk_escuro'), [servo('P0', 0)], [servo('P0', 180)])), 'sem_luz'],
+        [com3(se(cmp(LUZ, '<', 40), [servo('P0', 180), icone('Happy')], [servo('P0', 0)])), 'noite_aberto'],
+        [com3(se(cmp(LUZ, '<', 40), [servo('P0', 0), icone('Asleep')], [servo('P0', 180), icone('Happy')])), 'um_so'],
+        [com3(se(cmp(LUZ, '<', 40), [servo('P0', 0), icone('Asleep')], [se(cmp(LUZ, '<', 150), [servo('P0', 180)], [servo('P0', 180), icone('Happy')])])), 'sem_meio'],
+        [com3(se(cmp(LUZ, '<', 40), [servo('P0', 0)], [se(cmp(LUZ, '<', 150), [servo('P0', 90)], [servo('P0', 180), icone('Happy')])])), 'sem_dormir'],
+        [com3(se(cmp(LUZ, '<', 40), [servo('P0', 0), icone('Asleep')], [se(cmp(LUZ, '<', 150), [servo('P0', 90)], [servo('P0', 180), icone('Happy')])])), null],
+      ],
+    },
+    { // Ninho vigiado
+      ok: ninho2(se(cmp(TEMP, '<', 15), [icone('No'), tom(262)], [se(cmp(TEMP, '>', 30), [icone('Surprised'), tom(523)], [icone('Happy')])])),
+      errado: [ninho2(se(cmp(TEMP, '<', 15), [icone('No'), tom(262)], [se(cmp(TEMP, '>', 30), [icone('Surprised'), tom(262)], [icone('Happy')])])),
+        ninho2(se(cmp(TEMP, '<', 15), [icone('No'), tom(262)], [icone('Happy')]))],
+      fazer: [{ temperatura: 10 }, { esperar: 1200 }, { temperatura: 35 }, { esperar: 1200 }, { temperatura: 22 }, { esperar: 400 }], espera: 300,
+      regras: [
+        [xml(), 'sem_sempre'],
+        [ninho2(icone('Happy')), 'sem_se'],
+        [ninho2(se(cmp(LUZ, '<', 15), [icone('No'), tom(262)], [icone('Happy')])), 'sem_frio'],
+        [ninho2(se(cmp(TEMP, '<', 15), [icone('No'), tom(262)], [icone('Happy')])), 'sem_calor'],
+        [ninho2(se(cmp(TEMP, '<', 15), [icone('No')], [se(cmp(TEMP, '>', 30), [icone('Surprised'), tom(523)], [icone('Happy')])])), 'sem_alarmes'],
+        [ninho2(se(cmp(TEMP, '<', 15), [icone('No'), tom(262)], [se(cmp(TEMP, '>', 30), [icone('Surprised'), tom(262)], [icone('Happy')])])), 'iguais'],
+        [ninho2(se(cmp(TEMP, '<', 15), [icone('No'), tom(262)], [se(cmp(TEMP, '>', 30), [icone('Surprised'), tom(523)], [icone('Sad')])])), 'sem_contente'],
+        [ninho2(se(cmp(TEMP, '<', 15), [icone('No'), tom(262)], [se(cmp(TEMP, '>', 30), [icone('Surprised'), tom(523)], [icone('Happy')])])), null],
+      ],
+    },
+    { // Hotel de insetos
+      ok: hotel(seEntao(cmp(v('contador'), '=', 5), icone('Heart'), som('happy'))),
+      errado: [xml(E.pino('P1', seq(mudar('contador', 1), tom(523, 0.25), numero(v('contador')), icone('Heart'), som('happy')))),
+        hotel(seEntao(cmp(v('contador'), '=', 3), icone('Heart'), som('happy')))],
+      fazer: ['pino:P1', { esperar: 400 }, 'pino:P1', { esperar: 400 }, 'pino:P1', { esperar: 400 }, 'pino:P1', { esperar: 400 }, 'pino:P1'], espera: 1200,
+      regras: [
+        [xml(), 'sem_pino'],
+        [xml(E.pino('P1', seq(numero(v('contador'))))), 'sem_contar'],
+        [xml(E.pino('P1', seq(mudar('contador', 1), tom(523, 0.25)))), 'sem_numero'],
+        [xml(E.pino('P1', seq(mudar('contador', 1), tom(523, 0.25), numero(v('contador')), icone('Heart'), som('happy')))), 'festa_fora'],
+        [xml(E.pino('P1', seq(mudar('contador', 1), numero(v('contador'))))), 'sem_se'],
+        [hotel(seEntao(cmp(v('contador'), '=', 3), icone('Heart'))), 'sem_cinco'],
+        [hotel(seEntao(cmp(v('contador'), '=', 5), icone('Happy'))), 'sem_festa'],
+        [hotel(seEntao(cmp(v('contador'), '=', 5), icone('Heart'), som('happy'))), null],
+      ],
+    },
     // ---------------------------------------------------------------- Nível 3 · Investigar
     { // Diário da horta
       ok: sol.diario(),
@@ -284,6 +475,94 @@ module.exports = {
         [xml(E.sempre(seq(se(cmp(P1, '<', 300), [icone('Sad')], [])))), 'sem_abrir'],
         [sol.regaGambiarra(), 'sem_fechar'],
         [sol.rega(), null],
+      ],
+    },
+    // ---------------------------------------------------------------- Nível 3 · projetos (7–11)
+    { // Diário automático
+      ok: diario2(registar('humidade', P1), registar('luz', LUZ), registar('temperatura', TEMP), mudar('contador', 1), pausa(1000)),
+      errado: [diario2(registar('humidade', P1), registar('luz', LUZ), registar('temperatura', TEMP), mudar('contador', 1)),
+        diario2(registar('humidade', LUZ), registar('luz', LUZ), registar('temperatura', TEMP), mudar('contador', 1), pausa(1000))],
+      fazer: [{ 'analogico:P1': 500 }, { luz: 90 }, { temperatura: 28 }, { esperar: 2600 }, 'botao:A'], espera: 600,
+      regras: [
+        [xml(), 'sem_sempre'],
+        [xml(E.sempre(seq(pausa(1000)))), 'sem_registar'],
+        [xml(E.sempre(seq(registar('humidade', P1), pausa(1000)))), 'faltam'],
+        [xml(E.sempre(seq(registar('humidade', LUZ), registar('luz', LUZ), registar('temperatura', TEMP), pausa(1000)))), 'trocados'],
+        [diario2(registar('humidade', P1), registar('luz', LUZ), registar('temperatura', TEMP), mudar('contador', 1)), 'sem_pausa'],
+        [xml(E.sempre(seq(registar('humidade', P1), registar('luz', LUZ), registar('temperatura', TEMP), pausa(1000)))), 'sem_contar'],
+        [xml(E.sempre(seq(registar('humidade', P1), registar('luz', LUZ), registar('temperatura', TEMP), mudar('contador', 1), pausa(1000)))), 'sem_a'],
+        [xml(E.sempre(seq(registar('humidade', P1), registar('luz', LUZ), registar('temperatura', TEMP), mudar('contador', 1), pausa(1000))), E.botao('A', seq(numero(0)))), 'sem_mostrar'],
+        [diario2(registar('humidade', P1), registar('luz', LUZ), registar('temperatura', TEMP), mudar('contador', 1), pausa(1000)), null],
+      ],
+    },
+    { // Censo das aves
+      ok: censo(se(cmp(v('contador'), '>', v('pontos')), [texto('C')], [texto('A')])),
+      errado: [censo(se(cmp(v('contador'), '>', v('pontos')), [texto('A')], [texto('C')])),
+        xml(E.botao('A', seq(mudar('contador', 1))), E.botao('B', seq(mudar('pontos', 1))), E.botao('AB', seq(numero(v('contador')), se(cmp(v('contador'), '>', v('pontos')), [texto('C')], [texto('A')]))))],
+      fazer: ['botao:A', { esperar: 200 }, 'botao:A', { esperar: 200 }, 'botao:A', { esperar: 200 }, 'botao:B', { esperar: 200 }, 'botao:AB', { esperar: 1800 },
+        'botao:B', { esperar: 200 }, 'botao:B', { esperar: 200 }, 'botao:B', { esperar: 200 }, 'botao:AB'], espera: 1800,
+      regras: [
+        [xml(), 'sem_a'],
+        [xml(E.botao('A', seq(mudar('contador', 1)))), 'sem_b'],
+        [xml(E.botao('A', seq(mudar('contador', 1))), E.botao('B', '')), 'sem_contar'],
+        [xml(E.botao('A', seq(mudar('contador', 1))), E.botao('B', seq(mudar('contador', 1)))), 'mesma_var'],
+        [xml(E.botao('A', seq(mudar('contador', 1))), E.botao('B', seq(mudar('pontos', 1)))), 'sem_ab'],
+        [xml(E.botao('A', seq(mudar('contador', 1))), E.botao('B', seq(mudar('pontos', 1))), E.botao('AB', seq(numero(v('contador'))))), 'sem_total'],
+        [xml(E.botao('A', seq(mudar('contador', 1))), E.botao('B', seq(mudar('pontos', 1))), E.botao('AB', seq(numero(conta(v('contador'), '-', v('pontos')))))), 'soma_errada'],
+        [xml(E.botao('A', seq(mudar('contador', 1))), E.botao('B', seq(mudar('pontos', 1))), E.botao('AB', seq(numero(conta(v('contador'), '+', v('pontos')))))), 'sem_vencedor'],
+        [censo(se(cmp(v('contador'), '>', v('pontos')), [texto('A')], [texto('C')])), 'vencedor_trocado'],
+        [censo(se(cmp(v('contador'), '>', v('pontos')), [texto('C')], [texto('A')])), null],
+      ],
+    },
+    { // Recordes de geada e calor
+      ok: recordes(true),
+      errado: [recordes(false), xml(E.inicio(seq(definir('recorde', TEMP), definir('medida', TEMP))), E.sempre(seq(seEntao(cmp(TEMP, '>', v('recorde')), definir('recorde', TEMP)))),
+        E.botao('A', seq(numero(v('recorde')))), E.botao('B', seq(numero(v('medida')))))],
+      fazer: [{ temperatura: 30 }, { esperar: 300 }, { temperatura: 5 }, { esperar: 300 }, { temperatura: 20 }, { esperar: 300 }, 'botao:A', { esperar: 1500 }, 'botao:B'], espera: 600,
+      regras: [
+        [xml(), 'sem_inicio'],
+        [xml(E.inicio('')), 'sem_sempre'],
+        [xml(E.inicio(seq(definir('recorde', TEMP))), E.sempre('')), 'min_zero'],
+        [xml(E.inicio(seq(definir('medida', TEMP))), E.sempre('')), 'max_zero'],
+        [xml(E.inicio(seq(definir('recorde', TEMP), definir('medida', TEMP))), E.sempre('')), 'sem_max'],
+        [xml(E.inicio(seq(definir('recorde', TEMP), definir('medida', TEMP))), E.sempre(seq(seEntao(cmp(TEMP, '>', v('recorde')), definir('recorde', TEMP))))), 'sem_min'],
+        [xml(E.inicio(seq(definir('recorde', TEMP), definir('medida', TEMP))), recSempre()), 'sem_a'],
+        [xml(E.inicio(seq(definir('recorde', TEMP), definir('medida', TEMP))), recSempre(), E.botao('A', seq(numero(v('recorde'))))), 'sem_b'],
+        [recordes(true), null],
+      ],
+    },
+    { // Rega com temporizador
+      ok: rega2(se(cmp(P1, '<', 300), [servo('P0', 180), pausa(2000), servo('P0', 0), registar('rega', P1)], [servo('P0', 0)])),
+      errado: [rega2(se(cmp(P1, '<', 300), [servo('P0', 180), servo('P0', 0), registar('rega', P1)], [servo('P0', 0)])),
+        rega2(se(cmp(P1, '<', 300), [servo('P0', 180), pausa(2000), servo('P0', 0)], [servo('P0', 0)]))],
+      fazer: [{ 'analogico:P1': 100 }, { esperar: 4600 }, { 'analogico:P1': 800 }, { esperar: 2500 }], espera: 300,
+      regras: [
+        [xml(), 'sem_sempre'],
+        [rega2(servo('P0', 180)), 'sem_se'],
+        [rega2(se(b('mk_escuro'), [servo('P0', 180)], [servo('P0', 0)])), 'sem_humidade'],
+        [rega2(se(cmp(P1, '>', 300), [servo('P0', 180), pausa(2000), servo('P0', 0), registar('rega', P1)], [servo('P0', 0)])), 'ao_contrario'],
+        [rega2(se(cmp(P1, '<', 300), [registar('rega', P1)], [servo('P0', 0)])), 'sem_abrir'],
+        [rega2(se(cmp(P1, '<', 300), [servo('P0', 180), servo('P0', 0), registar('rega', P1)], [servo('P0', 0)])), 'sem_tempo'],
+        [rega2(se(cmp(P1, '<', 300), [servo('P0', 180), pausa(2000), registar('rega', P1)], [servo('P0', 0)])), 'sem_fechar'],
+        [rega2(se(cmp(P1, '<', 300), [servo('P0', 180), pausa(2000), servo('P0', 0)], [servo('P0', 0)])), 'sem_registo'],
+        [rega2(se(cmp(P1, '<', 300), [servo('P0', 180), pausa(2000), servo('P0', 0), registar('rega', P1)], [])), 'molhada_aberta'],
+        [rega2(se(cmp(P1, '<', 300), [servo('P0', 180), pausa(2000), servo('P0', 0), registar('rega', P1)], [servo('P0', 0)])), null],
+      ],
+    },
+    { // Duas plantas, quem tem sede?
+      ok: plantas(se(cmp(P0, '<', P1), [numero(0)], [numero(1)]), numero(conta(P1, '-', P0))),
+      errado: [plantas(se(cmp(P1, '<', P1), [numero(0)], [numero(1)]), numero(conta(P1, '-', P0))),
+        plantas(se(cmp(P0, '<', P1), [numero(1)], [numero(0)]), numero(conta(P1, '-', P0)))],
+      fazer: [{ 'analogico:P0': 100 }, { 'analogico:P1': 700 }, 'botao:A', { esperar: 300 }, 'botao:B', { esperar: 2500 }, { 'analogico:P0': 800 }, { 'analogico:P1': 200 }, 'botao:A'], espera: 500,
+      regras: [
+        [xml(), 'sem_a'],
+        [xml(E.botao('A', seq(numero(0)))), 'sem_se'],
+        [xml(E.botao('A', seq(se(cmp(P1, '<', P1), [numero(0)], [numero(1)])))), 'um_pino'],
+        [xml(E.botao('A', seq(se(cmp(P0, '<', P1), [], [])))), 'sem_respostas'],
+        [xml(E.botao('A', seq(se(cmp(P0, '<', P1), [numero(1)], [numero(0)])))), 'trocado'],
+        [xml(E.botao('A', seq(se(cmp(P0, '<', P1), [numero(0)], [numero(1)])))), 'sem_b'],
+        [plantas(se(cmp(P0, '<', P1), [numero(0)], [numero(1)]), numero(P1)), 'sem_diferenca'],
+        [plantas(se(cmp(P0, '<', P1), [numero(0)], [numero(1)]), numero(conta(P1, '-', P0))), null],
       ],
     },
   ],
