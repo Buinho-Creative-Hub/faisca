@@ -239,3 +239,30 @@ e da lanterna caso a caso, e o ecrã inicial.
 **Por fazer:** conteúdo das missões em preparação (validar com os materiais do Buinho Educativo); desafios de bancada
 (sem micro:bit a validar) como tipo novo; animação discreta do Nico por camadas (Fase 3); teste com crianças e com
 micro:bit verdadeiro (detetive e lanterna).
+
+## 8. Blocos e sensores (desde 17 Out 2026, noite)
+
+Para as missões Toy hacking, Citizen sensing, Matemática, Natureza e o alargamento de Reparar, o motor passou a ter
+(sempre com o aspecto e as cores das gavetas do MakeCode, e traduzidos para MicroPython V2 2.1.2):
+
+| Gaveta | Blocos | Registo (o que a validação lê) |
+|---|---|---|
+| Básico | `no arranque`, `mostrar número`, `mostrar texto` | `numero:N`, `texto:T` |
+| Entrada | `em inclinado…/ecrã para baixo/queda livre` (gestos), `em som alto`, `nível de luz`, `nível de som`, `temperatura (°C)`, `tempo de execução (ms)` | entradas `gesto:left`, `somalto`, `luz:V`, `som:V`, `temperatura:V` |
+| LED | `acender x y`, `apagar x y`, `desenhar gráfico de barras` | `acender:x,y`, `apagar:x,y`, `grafico:0–25` |
+| Variáveis | `definir … para`, `mudar … em`, valor (contador, pontos, medida, recorde, vidas, passos) | `var:nome:valor` |
+| Matemática | conta (+ − × ÷), `escolher ao acaso`, `resto de … ÷ …` | — |
+| Lógica | comparar (< > = ≤ ≥ ≠), `se … então` (sem senão) | — |
+| Pinos | `leitura digital pin`, `leitura analógica pin`, `escrever servo pin … para …` | entradas `digital:P0:1`, `analogico:P1:V`; saída `servo:P0:90` |
+| Registo de dados | `registar dados nome = valor` (MicroPython `log`, abre-se no MY_DATA.HTM) | `registo:nome:valor` |
+
+- **Micro:bit do ecrã:** letra 5×5 própria (texto e números a passar), gráfico, LEDs individuais, servo desenhado,
+  tabela dos dados registados e as variáveis em pastilhas. Por baixo, **controlos dos sensores** (luz, som + «bater
+  palmas», temperatura, pinos analógicos/digitais, gestos) — só aparecem os que a caixa e o programa usam.
+- **Registo:** desenhos repetidos por um «para sempre» não se repetem no registo (mas contam sempre depois de uma entrada).
+- **Verificação:** `F.verif` ganhou `houve`, `numeros`, `valorDe`, `aposSensor(reg, 'luz', v => v < 40, teste)`.
+- **Pistas em série:** `js/pistas.js` — `P.evento`, `P.bloco`, `P.valorEm`, `P.regra` (nível 1 escrito à mão; 2 e 3
+  saem do nome e da cor do bloco).
+- **Caixa:** cumulativa por defeito; um desafio pode fixá-la com `caixa: [...]` para não crescer demais.
+- **Testes:** um ficheiro de casos por missão em `testes/casos/`; `testes/testar.js` valida também que o MicroPython
+  gerado é válido; `testes/blocos-novos.js` testa cada bloco novo no ecrã e em Python.
