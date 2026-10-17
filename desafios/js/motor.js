@@ -8,7 +8,9 @@
 
   class Parado extends Error {}
   const BATIDA_MS = 500;      // 120 bpm, como o MakeCode
-  const ICONE_MS = 600;       // o mostrar ícone do MakeCode espera 600 ms
+  // No MakeCode o «mostrar ícone» espera 600 ms. Aqui é quase imediato, de propósito:
+  // sem «pausa» os desenhos mudam tão depressa que não se vêem — é isso que o desafio 2 ensina.
+  const ICONE_MS = 20;
 
   class Motor {
     constructor(ws, saidas, registo) {

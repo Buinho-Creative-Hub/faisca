@@ -45,6 +45,28 @@
   }
   const conta = (l, v) => l.filter(x => x === v).length;
 
+  // Quantas vezes um ícone ficou VISÍVEL (pelo menos minMs) depois de uma entrada.
+  // Valida o comportamento, não a presença dos blocos.
+  function visiveis(reg, entrada, nome, minMs = 120, janela = 15000) {
+    let melhor = 0;
+    for (let i = 0; i < reg.length; i++) {
+      const e = reg[i];
+      if (e.dir !== 'in' || e.v !== entrada) continue;
+      const ics = [];
+      for (let j = i + 1; j < reg.length && reg[j].t - e.t <= janela; j++) {
+        if (reg[j].dir === 'out' && (reg[j].v.startsWith('icone:') || reg[j].v === 'limpar')) ics.push(reg[j]);
+      }
+      let n = 0;
+      ics.forEach((x, k) => {
+        const fim = k + 1 < ics.length ? ics[k + 1].t : performance.now();
+        if (x.v === 'icone:' + nome && fim - x.t >= minMs) n++;
+      });
+      melhor = Math.max(melhor, n);
+    }
+    return melhor;
+  }
+  const algumPino = (reg, teste) => ['pino:P0', 'pino:P1', 'pino:P2'].some(p => depois(reg, p, teste));
+
   const DESAFIOS = [
     {
       titulo: 'Acorda-o',
@@ -62,7 +84,7 @@
       material: 'micro:bit V2',
       novos: ['mk_logo', 'mk_repetir', 'mk_icone_coracao', 'mk_icone_pequeno', 'mk_pausa'],
       teste: 'logo',
-      ok: r => depois(r, 'logo', s => conta(s, 'icone:Heart') >= 4 && conta(s, 'icone:SmallHeart') >= 4, 15000),
+      ok: r => visiveis(r, 'logo', 'Heart') >= 4 && visiveis(r, 'logo', 'SmallHeart') >= 4,
     },
     {
       titulo: 'Sim ou não?',
@@ -89,7 +111,7 @@
       material: '2 crocodilos + uma fruta',
       novos: ['mk_pino_tocado', 'mk_tom'],
       teste: 'pino:P1',
-      ok: r => depois(r, 'pino:P1', s => s.some(x => x.startsWith('tom:'))),
+      ok: r => algumPino(r, s => s.some(x => x.startsWith('tom:'))),
     },
     {
       titulo: 'Luz de fora',
@@ -98,10 +120,13 @@
       material: 'LED + 2 crocodilos',
       novos: ['mk_digital_1', 'mk_digital_0'],
       teste: 'pino:P1',
-      ok: r => depois(r, 'pino:P1', s => {
-        const a = s.indexOf('digital:P2:1');
+      // aceita qualquer pino de saída: o que conta é acender, tocar e apagar
+      ok: r => algumPino(r, s => {
+        const a = s.findIndex(x => /^digital:P\d:1$/.test(x));
+        if (a < 0) return false;
+        const pino = s[a].split(':')[1];
         const n = s.findIndex((x, i) => i > a && x.startsWith('tom:'));
-        return a >= 0 && n > a && s.indexOf('digital:P2:0', n) > n;
+        return n > a && s.indexOf('digital:' + pino + ':0', n) > n;
       }),
     },
     {

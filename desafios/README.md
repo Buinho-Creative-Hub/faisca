@@ -20,6 +20,18 @@ A Faísca verifica sozinha quando o desafio está cumprido (no micro:bit do ecr�
 
 **Modo professor:** abrir `index.html?todos=1` desbloqueia todos os desafios.
 
+## A Gabi
+
+A **Gabi, a capivara da gambiarra**, é a tutora: observa o que a criança faz no editor e ajuda sem resolver por ela.
+
+- **Pistas em 3 níveis** (pergunta → onde procurar → passo concreto), por pedido («Ajuda») ou quando um teste não resulta.
+- Reconhece blocos em falta, no sítio errado, sequências incompletas e erros típicos de cada desafio; dá os parabéns quando a criança corrige sozinha.
+- Distingue ter os blocos de o programa funcionar: os desafios só contam quando o micro:bit faz o que se pede.
+- Convite discreto quando a criança está parada; pode ser recolhida a qualquer momento.
+- **«Ajudar a Gabi»**: num desafio já feito, a Gabi mostra uma gambiarra dela que não funciona e pede ajuda para a reparar.
+
+Regras e mensagens em `js/gabi-regras.js`. Demonstração dos 8 estados em `gabi-demo.html`. Testes e limitações em `TESTES-GABI.md`.
+
 ## micro:bit do ecrã e micro:bit verdadeiro
 
 Os miúdos testam no micro:bit desenhado (botões A, B, A+B, Agitar, logotipo e pinos 0 e 1 são clicáveis). Com **Ligar micro:bit**, o mesmo programa passa a mexer também no micro:bit verdadeiro, por Bluetooth, e os botões, o agitar, o logotipo e os pinos da placa contam para os desafios.
@@ -35,6 +47,8 @@ Para isso, cada micro:bit V2 tem de ter **uma vez** o programa companheiro: <htt
 | `js/motor.js` | corre o programa (eventos, repetir, pausas) no ecrã e na placa |
 | `js/sim.js` | micro:bit no ecrã e sons |
 | `js/ble.js` | ligação Bluetooth ao programa companheiro |
+| `js/gabi-*.js` | a Gabi: leitura do programa, regras, motor pedagógico, painel |
+| `img/gabi/` | os 8 sprites da Gabi |
 | `vendor/` | Blockly 12 (Apache 2.0), local para funcionar offline |
 
 Buinho FabLab · Messejana · CC BY-SA 4.0

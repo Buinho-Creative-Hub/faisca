@@ -174,5 +174,85 @@ body {
   .caminho { order: 3; flex-basis: 100%; }
   .palco { flex-direction: column; }
   .lado { flex-basis: auto; border-right: 0; }
-  .editor { min-height: 520px; }
+  .editor { min-height: 560px; height: 94vh; }
+}
+
+/* ---------------------------------------------------------------- Gabi */
+.gabi {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  padding: 8px 16px 0;
+  border-top: 1px solid var(--linha);
+  background: #fff;
+  min-height: 148px;
+}
+.gabi-avatar {
+  flex: 0 0 auto;
+  width: 150px; height: 140px;
+  padding: 0; border: 0; background: none; cursor: pointer;
+  position: relative;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.gabi-avatar img { max-width: 100%; max-height: 100%; object-fit: contain; object-position: bottom; display: block; }
+.gabi-avatar:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.gabi-avatar[data-novo]::after {
+  content: ''; position: absolute; top: 4px; right: 4px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--vermelho); border: 2px solid #fff;
+}
+@keyframes gabiSalto { 0% { transform: translateY(0) } 35% { transform: translateY(-8px) } 70% { transform: translateY(0) } 85% { transform: translateY(-3px) } 100% { transform: translateY(0) } }
+.gabi-avatar.salto img { animation: gabiSalto 520ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .gabi-avatar.salto img { animation: none; } }
+
+.gabi-balao {
+  flex: 1 1 auto;
+  align-self: center;
+  position: relative;
+  margin: 8px 0 14px;
+  padding: 10px 16px 12px;
+  background: #fff;
+  border: 2.5px solid var(--tinta);
+  border-radius: 12px;
+  min-width: 0;
+}
+.gabi-balao::before {
+  content: ''; position: absolute; left: -13px; bottom: 22px;
+  border: 12px solid transparent; border-right-color: var(--tinta); border-left: 0;
+}
+.gabi-balao::after {
+  content: ''; position: absolute; left: -9px; bottom: 24px;
+  border: 10px solid transparent; border-right-color: #fff; border-left: 0;
+}
+.gabi-balao.tipo-convite { border-style: dashed; }
+.gabi-balao.tipo-convite .gabi-texto { color: var(--cinza); font-weight: 400; }
+.gabi-balao.tipo-correcao, .gabi-balao.tipo-sucesso { background: #fff8e3; }
+.gabi-balao.tipo-correcao::after, .gabi-balao.tipo-sucesso::after { border-right-color: #fff8e3; }
+.gabi-cabeca { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
+.gabi-nome { font-size: 13px; font-weight: 700; color: var(--azul); }
+.gabi-nivel { display: inline-flex; gap: 4px; }
+.gabi-nivel span { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--tinta); }
+.gabi-nivel span.on { background: var(--sol); }
+.gabi-texto { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.35; }
+
+.gabi-acoes { flex: 0 0 auto; align-self: center; display: flex; flex-direction: column; gap: 8px; padding-bottom: 6px; }
+.gabi-fechar {
+  min-height: 36px; border: 0; background: none; color: var(--cinza);
+  font: 700 14px 'Asap', sans-serif; text-decoration: underline; cursor: pointer;
+}
+
+/* recolhida: só a cabeça e o botão de ajuda */
+.gabi.recolhida { min-height: 0; padding: 4px 16px; align-items: center; }
+.gabi.recolhida .gabi-avatar { width: 60px; height: 56px; }
+.gabi.recolhida .gabi-balao, .gabi.recolhida .gabi-fechar, .gabi.recolhida #gabiGambiarra { display: none; }
+.gabi.recolhida .gabi-acoes { flex-direction: row; padding: 0; }
+
+.festa-gabi { width: 150px; height: auto; animation: salto 600ms ease-out; }
+.festa-extra { margin: -8px 0 22px !important; font-size: 16px !important; color: var(--cinza); }
+
+@media (max-width: 900px) {
+  .gabi-avatar { width: 96px; height: 92px; }
+  .gabi-texto { font-size: 16px; }
+  .gabi { min-height: 108px; }
 }

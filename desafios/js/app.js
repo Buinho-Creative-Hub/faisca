@@ -61,9 +61,24 @@
     verificar();
   });
 
+  // ------------------------------------------------------------ Gabi
+  const gabiUI = new F.GabiUI();
+  const gabi = new F.GabiMotor(m => gabiUI.mostrar(m));
+  let gambiarra = null;      // { xml } do programa da criança enquanto ajuda a Gabi
+  let sucessoEm = -Infinity;
+  let falha = null;
+  const analisar = () => gabi.programaMudou(F.gabiAnalisar(ws));
+  setInterval(() => gabi.tick(), 1000);
+  setInterval(() => verificar(), 400);   // algumas validações dependem do tempo que um desenho fica visível
+
   function entrada(k, origem) {
     if (k === 'agitar' && origem === 'microbit') { sim.svg.classList.remove('a-agitar'); void sim.svg.getBBox(); sim.svg.classList.add('a-agitar'); }
     motor.acontecimento(k);
+    // A Gabi espera que o programa corra antes de concluir que o teste falhou
+    gabi.testou();
+    const t0 = performance.now();
+    clearTimeout(falha);
+    falha = setTimeout(() => { if (sucessoEm < t0) gabi.testeFalhou(); }, 4000);
   }
 
   function reiniciar() {
@@ -79,9 +94,9 @@
     if (ev.isUiEvent || ev.type === Blockly.Events.FINISHED_LOADING) return;
     clearTimeout(espera);
     espera = setTimeout(() => {
-      estado.xml = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(ws));
-      gravar();
+      if (!gambiarra) { estado.xml = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(ws)); gravar(); }
       reiniciar();
+      analisar();
     }, 250);
   });
 
@@ -92,19 +107,29 @@
     if (d.livre || festejado === estado.atual) return;
     if (d.ok(registo)) {
       festejado = estado.atual;
+      sucessoEm = performance.now();
+      if (gambiarra) {
+        const [e, t] = F.GABI.GERAIS.gambiarraObrigada;
+        gabiUI.mostrar({ estado: e, texto: t, tipo: 'sucesso', pedida: true });
+        return;
+      }
+      const s = gabi.sucesso();
       if (estado.feitos <= estado.atual) { estado.feitos = estado.atual + 1; gravar(); }
       desenharCaminho();
-      setTimeout(festa, 900);
+      atualizarBotoesGabi();
+      setTimeout(() => festa(s), 900);
     }
   }
 
-  function festa() {
+  function festa(s) {
     const n = estado.atual;
     const seguinte = F.DESAFIOS[n + 1];
     $('festaTitulo').textContent = 'Conseguiste!';
-    $('festaTexto').textContent = !seguinte ? 'Fizeste todos os desafios.'
-      : seguinte.livre ? `Fizeste os ${n + 1} desafios! Agora tens todos os blocos para inventar.`
+    $('festaTexto').textContent = (s && s.texto) ? s.texto
+      : !seguinte ? 'Fizeste todos os desafios.'
       : `«${F.DESAFIOS[n].titulo}» está feito. No próximo desafio aparecem blocos novos.`;
+    $('festaExtra').hidden = !(s && s.extensao);
+    $('festaExtra').textContent = s && s.extensao ? 'Desafio extra: ' + s.extensao : '';
     $('btnSeguinte').hidden = !seguinte;
     $('btnSeguinte').textContent = !seguinte ? '' : seguinte.livre ? 'Inventar o meu brinquedo' : `Desafio ${n + 2}: ${seguinte.titulo}`;
     $('festa').hidden = false;
@@ -113,6 +138,7 @@
 
   function mudarDesafio(n) {
     if (!desbloqueado(n)) return;
+    if (gambiarra) sairGambiarra(false);
     estado.atual = n;
     festejado = -1;
     gravar();
@@ -128,6 +154,37 @@
     ws.updateToolbox(F.caixa(n));
     desenharCaminho();
     reiniciar();
+    gabi.entrarDesafio(n, n < estado.feitos);
+    analisar();
+    atualizarBotoesGabi();
+  }
+
+  // ------------------------------------------------------------ a Gabi também erra
+  function carregar(xml) {
+    ws.clear();
+    try { Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(xml), ws); } catch (e) { console.warn(e); }
+  }
+  function atualizarBotoesGabi() {
+    const g = F.GABI.DESAFIOS[estado.atual] && F.GABI.DESAFIOS[estado.atual].gambiarra;
+    $('gabiGambiarra').hidden = !(g && estado.atual < estado.feitos && !gambiarra);
+    $('gabiVoltar').hidden = !gambiarra;
+  }
+  function entrarGambiarra() {
+    const g = F.GABI.DESAFIOS[estado.atual].gambiarra;
+    gambiarra = { xml: estado.xml };
+    festejado = -1;
+    carregar(g.xml);
+    gabi.reset(); gabi.n = estado.atual;
+    gabiUI.mostrar({ estado: 'surpreendida', texto: g.pedido, tipo: 'gambiarra' });
+    atualizarBotoesGabi();
+  }
+  function sairGambiarra(avisar = true) {
+    const xml = gambiarra.xml;
+    gambiarra = null;
+    carregar(xml || '<xml></xml>');
+    festejado = estado.atual;
+    if (avisar) gabiUI.mostrar({ estado: 'incentivar', texto: 'De volta ao teu programa. Obrigada pela ajuda!', tipo: 'info' });
+    atualizarBotoesGabi();
   }
 
   const CADEADO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
@@ -160,6 +217,9 @@
     document.querySelector('.sim-placa').style.filter = escuro ? 'brightness(0.55)' : '';
   });
   $('btnRecomecar').addEventListener('click', reiniciar);
+  $('gabiAjuda').addEventListener('click', () => { gabiUI.recolher(false, false); gabi.pedirAjuda(); });
+  $('gabiGambiarra').addEventListener('click', entrarGambiarra);
+  $('gabiVoltar').addEventListener('click', () => sairGambiarra(true));
   $('btnFicar').addEventListener('click', () => { $('festa').hidden = true; });
   $('btnSeguinte').addEventListener('click', () => { $('festa').hidden = true; mudarDesafio(estado.atual + 1); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') $('festa').hidden = true; });
@@ -192,5 +252,5 @@
 
   mudarDesafio(estado.atual);
   window.addEventListener('resize', () => Blockly.svgResize(ws));
-  F.app = { ws, motor, sim, ble, estado, mudarDesafio, registo: () => registo };
+  F.app = { ws, motor, sim, ble, estado, mudarDesafio, registo: () => registo, gabi, gabiUI, entrada, entrarGambiarra, sairGambiarra };
 })();
