@@ -127,6 +127,7 @@
     const novos = new Set(DESAFIOS[n].novos);
     // os novos primeiro, com um separador maior, para se verem logo
     const ordem = [...tipos.filter(t => novos.has(t)), ...tipos.filter(t => !novos.has(t))];
+    if (ordem.length > LIMITE_SEM_GAVETAS) return gavetas(ordem.filter(k => XML[k]), novos);
     let xml = '<xml>';
     ordem.forEach((t, i) => {
       xml += XML[t];
@@ -135,7 +136,36 @@
     return xml + '</xml>';
   }
 
+  // Muitos blocos → gavetas como no MakeCode (Básico, Entrada, Música…), com os novos numa gaveta própria
+  const LIMITE_SEM_GAVETAS = 16;
+  const GAVETA_DE = {
+    mk_sempre: 'Básico', mk_iniciar: 'Básico', mk_icone: 'Básico', mk_mostrar_numero: 'Básico', mk_mostrar_texto: 'Básico', mk_limpar: 'Básico', mk_pausa: 'Básico',
+    mk_agitar: 'Entrada', mk_logo: 'Entrada', mk_botao: 'Entrada', mk_pino_tocado: 'Entrada', mk_gesto: 'Entrada', mk_som_alto: 'Entrada',
+    mk_escuro: 'Entrada', mk_botao_premido: 'Entrada', mk_luz: 'Entrada', mk_som_nivel: 'Entrada', mk_temperatura: 'Entrada', mk_tempo: 'Entrada',
+    mk_som: 'Música', mk_tom: 'Música', mk_acender: 'LED', mk_apagar_led: 'LED', mk_grafico: 'LED',
+    mk_repetir: 'Ciclos', mk_se: 'Lógica', mk_se_entao: 'Lógica', mk_comparar: 'Lógica',
+    mk_var_definir: 'Variáveis', mk_var_mudar: 'Variáveis', mk_var: 'Variáveis',
+    mk_conta: 'Matemática', mk_aleatorio: 'Matemática', mk_resto: 'Matemática',
+    mk_digital: 'Pinos', mk_ler_digital: 'Pinos', mk_ler_analogico: 'Pinos', mk_servo: 'Pinos', mk_registar: 'Registo de dados',
+  };
+  const CORES_GAVETA = { 'Básico': '#1e90ff', 'Entrada': '#d400d4', 'Música': '#e63022', 'LED': '#5c2d91', 'Ciclos': '#00aa00', 'Lógica': '#00a4a6',
+    'Variáveis': '#dc143c', 'Matemática': '#9400d3', 'Pinos': '#b22222', 'Registo de dados': '#378273', 'Novos': '#ffb000' };
+  function gavetas(chaves, novos) {
+    const tipo = k => (XML[k].match(/type="([a-z_]+)"/) || [])[1];
+    const grupos = {};
+    if (novos.size) grupos['Novos'] = [...novos].filter(k => XML[k]);
+    for (const k of chaves) { if (novos.has(k)) continue; const g = GAVETA_DE[tipo(k)] || 'Básico'; (grupos[g] = grupos[g] || []).push(k); }
+    const ordem = ['Novos', 'Básico', 'Entrada', 'Música', 'LED', 'Ciclos', 'Lógica', 'Variáveis', 'Matemática', 'Pinos', 'Registo de dados'];
+    // uma só coluna (o Blockly não deixa trocar de caixa simples para caixa com categorias a meio), com secções por gaveta
+    let xml = '<xml>';
+    for (const g of ordem) if (grupos[g] && grupos[g].length) {
+      xml += `<label text="${g === 'Novos' ? 'Blocos novos' : g}" web-class="gaveta gaveta-${g.normalize('NFD').replace(/[^a-zA-Z]/g, '').toLowerCase()}"></label>` + grupos[g].map(k => XML[k]).join('') + '<sep gap="28"></sep>';
+    }
+    return xml + '</xml>';
+  }
+
   F.caixa = caixa;
+  F.gavetas = gavetas;
   // houve(reg, 'numero:') — alguma saída começa por / corresponde a (texto ou RegExp)?
   const houve = (reg, t) => reg.some(e => e.dir === 'out' && (t instanceof RegExp ? t.test(e.v) : e.v.startsWith(t)));
   // números mostrados no ecrã, por ordem
@@ -157,8 +187,49 @@
   F.ORDEM_MASCOTES = [];
   F.ORDEM_MISSOES = [];
   F.registarMascote = m => { F.MASCOTES[m.id] = m; F.ORDEM_MASCOTES.push(m.id); };
+  // Todos os blocos da plataforma (um de cada tipo) — a caixa do projeto livre do último nível
+  F.TODOS_BLOCOS = ['mk_agitar', 'mk_logo', 'mk_botao', 'mk_pino_tocado', 'mk_gesto', 'mk_som_alto', 'mk_iniciar', 'mk_sempre',
+    'mk_icone', 'mk_mostrar_numero', 'mk_mostrar_texto', 'mk_limpar', 'mk_pausa', 'mk_acender', 'mk_apagar_led', 'mk_grafico',
+    'mk_repetir', 'mk_se_entao', 'mk_se_senao', 'mk_comparar', 'mk_escuro', 'mk_botao_premido',
+    'mk_luz', 'mk_som_nivel', 'mk_temperatura', 'mk_tempo', 'mk_var_definir', 'mk_var_mudar', 'mk_var',
+    'mk_conta', 'mk_aleatorio', 'mk_resto', 'mk_som', 'mk_tom', 'mk_digital_1', 'mk_ler_digital', 'mk_ler_analogico',
+    'mk_servo', 'mk_registar'];
+  // Projeto livre no fim de cada nível (o 12.º desafio): gerado aqui, com os blocos a crescer de nível para nível —
+  // nível 1: os blocos do nível 1 · nível 2: os dos níveis 1 e 2 · último nível: todos os blocos da plataforma.
+  // Textos opcionais por nível em missao.livres = [{ titulo, missao, passos, boasVindas }].
+  const LIVRE_TXT = [
+    'Projeto livre! Tens os blocos deste nível. Inventa o que quiseres — se precisares de mim, estou aqui.',
+    'Projeto livre! Agora tens os blocos dos dois primeiros níveis. Junta-os e inventa algo teu.',
+    'Projeto livre, sem limites: tens todos os blocos! Inventa o teu próprio projeto.',
+  ];
+  function criarLivres(m) {
+    // um desafio «livre» escrito à mão passa a dar o texto do livre desse nível
+    m.livres = m.livres || [];
+    m.niveis.forEach((nv, k) => {
+      const l = nv.desafios.find(d => d.livre);
+      if (l && !m.livres[k]) m.livres[k] = { titulo: l.titulo, missao: l.missao, passos: l.passos, material: l.material };
+      nv.desafios = nv.desafios.filter(d => !d.livre);
+    });
+    m.niveis = m.niveis.filter(nv => nv.desafios.length);
+    const blocos = [];
+    m.niveis.forEach((nv, k) => {
+      for (const d of nv.desafios) for (const key of [...(d.novos || []), ...(d.caixa || [])]) if (!blocos.includes(key)) blocos.push(key);
+      const ultimo = k === m.niveis.length - 1;
+      const t = m.livres[k] || {};
+      const caixa = ultimo ? F.TODOS_BLOCOS.slice() : blocos.slice();
+      nv.desafios.push({
+        titulo: t.titulo || 'Projeto livre',
+        missao: t.missao || (ultimo ? 'Agora é contigo: inventa um projeto com todos os blocos.' : `Agora é contigo: inventa um projeto com os blocos ${k ? 'dos níveis 1 e 2' : 'do nível 1'}.`),
+        passos: t.passos || ['Escolhe uma ideia: um brinquedo, um aparelho, um jogo…', 'Experimenta no micro:bit do ecrã.', 'Envia para o micro:bit e mostra à turma.'],
+        material: t.material || 'o que tiveres',
+        novos: [], caixa, livre: true, gerado: true, ok: () => false,
+        tutor: { boasVindas: ['testar', t.boasVindas || LIVRE_TXT[ultimo ? 2 : Math.min(k, 1)]], parecePronto: () => false, testar: '', regras: [], sucesso: '', extensao: '' },
+      });
+    });
+  }
   F.registarMissao = m => {
     if (m.xml) Object.assign(XML, m.xml);
+    criarLivres(m);
     F.MISSOES[m.id] = m; F.ORDEM_MISSOES.push(m.id);
   };
   // desafios de uma missão, por ordem, com o nível de cada um

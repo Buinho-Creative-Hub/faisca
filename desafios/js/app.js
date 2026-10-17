@@ -13,7 +13,6 @@
   const CHAVE = F.chaveMissao(X);
   const params = new URLSearchParams(location.search);
   const N = F.DESAFIOS.length;
-  const contaveis = F.DESAFIOS.filter(d => !d.livre).length;
 
   // ------------------------------------------------------------ marca e mascote
   document.title = M.marca.nome + ' · ' + X.titulo;
@@ -187,7 +186,12 @@
         return;
       }
       const s = tutor.sucesso();
-      if (estado.feitos <= estado.atual) { estado.feitos = estado.atual + 1; gravar(); }
+      if (estado.feitos <= estado.atual) {
+        estado.feitos = estado.atual + 1;
+        // o seguinte é o projeto livre? abre também o primeiro desafio do nível seguinte
+        if (F.DESAFIOS[estado.feitos] && F.DESAFIOS[estado.feitos].livre) estado.feitos++;
+        gravar();
+      }
       desenharCaminho();
       atualizarBotoesTutor();
       F.Som.tocar('sucesso');
@@ -199,19 +203,25 @@
     const n = estado.atual;
     const atual = F.DESAFIOS[n];
     const seguinte = F.DESAFIOS[n + 1];
-    const novoNivel = seguinte && seguinte.nivel !== atual.nivel && !seguinte.livre;
-    $('festaTitulo').textContent = !seguinte ? 'Missão cumprida!' : novoNivel ? 'Nível desbloqueado!' : 'Conseguiste!';
+    // depois do 11.º desafio de um nível vem o projeto livre; o nível seguinte (se houver) abre ao mesmo tempo
+    const fimDeNivel = !!(seguinte && seguinte.livre);
+    const proximoNivel = fimDeNivel ? F.DESAFIOS[n + 2] : null;
+    const fimDeMissao = fimDeNivel && !proximoNivel;
+    $('festaTitulo').textContent = fimDeMissao ? 'Missão cumprida!' : fimDeNivel ? 'Nível desbloqueado!' : 'Conseguiste!';
     let texto = (s && s.texto) ? s.texto : `«${atual.titulo}» está feito. No próximo desafio aparecem blocos novos.`;
-    if (novoNivel) texto += ` Abriste o ${seguinte.nivelNome}.`;
-    if (!seguinte) texto += ' ' + F.voz(F.TUTOR.GERAIS.fimMissao[1]);
+    if (fimDeNivel && proximoNivel) texto += ` Acabaste o ${atual.nivelNome}: tens um projeto livre à tua espera e o ${proximoNivel.nivelNome} já está aberto.`;
+    if (fimDeMissao) texto += ' ' + F.voz(F.TUTOR.GERAIS.fimMissao[1]) + ' Antes, experimenta o projeto livre com todos os blocos.';
     $('festaTexto').textContent = texto;
     $('festaExtra').hidden = !(s && s.extensao);
     $('festaExtra').textContent = s && s.extensao ? 'Desafio extra: ' + s.extensao : '';
-    $('btnSeguinte').textContent = !seguinte ? 'Escolher outra missão' : seguinte.livre ? 'Inventar a minha engenhoca' : `Desafio ${n + 2}: ${seguinte.titulo}`;
+    $('btnSeguinte').textContent = !seguinte ? 'Escolher outra missão' : seguinte.livre ? 'Projeto livre ★' : `Desafio seguinte: ${seguinte.titulo}`;
+    $('btnFicar').textContent = proximoNivel ? `Ir para o ${proximoNivel.nivelNome.split(' · ')[0]}` : 'Ficar aqui';
+    $('btnFicar').dataset.ir = proximoNivel ? String(n + 2) : '';
     $('festa').hidden = false;
-    if (novoNivel || !seguinte) setTimeout(() => F.Som.tocar('nivel'), 700);
+    if (fimDeNivel) setTimeout(() => F.Som.tocar('nivel'), 700);
     $('btnSeguinte').focus();
   }
+
 
   function mudarDesafio(n) {
     if (!desbloqueado(n)) return;
@@ -220,7 +230,8 @@
     festejado = -1;
     gravar();
     const d = F.DESAFIOS[n];
-    $('missaoNum').textContent = d.livre ? 'Desafio livre' : `${d.nivelNome} · desafio ${n + 1} de ${contaveis}`;
+    const doNivel = F.DESAFIOS.filter(x => x.nivel === d.nivel && !x.livre);
+    $('missaoNum').textContent = d.livre ? `${d.nivelNome} · projeto livre` : `${d.nivelNome} · desafio ${doNivel.indexOf(d) + 1} de ${doNivel.length}`;
     $('missaoTitulo').textContent = d.titulo;
     $('missaoFrase').textContent = d.missao;
     $('missaoPassos').innerHTML = '';
@@ -269,10 +280,32 @@
   }
 
   const CADEADO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  // Caminho do topo: separadores dos níveis + os 12 desafios do nível em que estás (11 guiados + ★ projeto livre)
   function desenharCaminho() {
     const nav = $('caminho');
     nav.innerHTML = '';
+    const nivelAtual = F.DESAFIOS[estado.atual].nivel;
+    const nNiveis = X.niveis.length;
+    if (nNiveis > 1) X.niveis.forEach((nv, k) => {
+      const t = document.createElement('button');
+      t.type = 'button'; t.className = 'nivel-tab';
+      t.textContent = 'Nível ' + (k + 1);
+      t.title = nv.nome;
+      const primeiro = F.DESAFIOS.findIndex(d => d.nivel === k);
+      t.disabled = !desbloqueado(primeiro);
+      if (k === nivelAtual) t.setAttribute('aria-current', 'true');
+      t.addEventListener('click', () => {
+        // vai para o primeiro desafio por fazer desse nível (ou o primeiro)
+        const doNivel = F.DESAFIOS.map((d, i) => i).filter(i => F.DESAFIOS[i].nivel === k);
+        const alvo = doNivel.find(i => i >= estado.feitos && desbloqueado(i)) ?? doNivel.filter(desbloqueado).pop() ?? primeiro;
+        mudarDesafio(alvo);
+      });
+      nav.appendChild(t);
+    });
+    let k = 0;
     F.DESAFIOS.forEach((d, i) => {
+      if (d.nivel !== nivelAtual) return;
+      k++;
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'passo';
@@ -280,9 +313,8 @@
       if (i === estado.atual) b.classList.add('atual');
       else if (i < estado.feitos) b.classList.add('feito');
       if (!aberto) { b.classList.add('fechado'); b.innerHTML = CADEADO; b.setAttribute('aria-disabled', 'true'); }
-      else b.textContent = d.livre ? '★' : String(i + 1);
-      if (i > 0 && d.nivel !== F.DESAFIOS[i - 1].nivel) b.classList.add('novo-nivel');   // separador entre níveis
-      b.setAttribute('aria-label', (d.livre ? 'Desafio livre' : `Desafio ${i + 1}`) + `: ${d.titulo}` + (aberto ? '' : ' (fechado)'));
+      else b.textContent = d.livre ? '★' : String(k);
+      b.setAttribute('aria-label', (d.livre ? 'Projeto livre' : `Desafio ${k}`) + `: ${d.titulo}` + (aberto ? '' : ' (fechado)'));
       b.title = d.nivelNome + ' — ' + d.titulo;
       b.addEventListener('click', () => mudarDesafio(i));
       nav.appendChild(b);
@@ -304,7 +336,11 @@
   $('tutorAjuda').addEventListener('click', () => { tutorUI.recolher(false, false); tutor.pedirAjuda(); });
   $('tutorGambiarra').addEventListener('click', entrarGambiarra);
   $('tutorVoltar').addEventListener('click', () => sairGambiarra(true));
-  $('btnFicar').addEventListener('click', () => { $('festa').hidden = true; });
+  $('btnFicar').addEventListener('click', e => {
+    $('festa').hidden = true;
+    const ir = e.currentTarget.dataset.ir;
+    if (ir) mudarDesafio(Number(ir));
+  });
   $('btnSeguinte').addEventListener('click', () => {
     $('festa').hidden = true;
     if (estado.atual + 1 >= N) { location.href = $('btnMissoes').href; return; }
