@@ -186,5 +186,10 @@ desafios. Exige gravar o companheiro em cada placa antes. Em sala, o **.hex por 
   as luzes do brinquedo sem fios entre os dois (ligar motores exige relé/transístor).
 - **Circuitos de massinha** como teclas (massa caseira com sal conduz melhor que a comprada).
 - **Estufa gambiarra** (UFV): blocos de solo e relé.
-- **Versão Alentejo:** mascote nova (a decidir pelo Carlos), desafios ligados ao território (montado, água, calor,
-  sons da aldeia), mesma plataforma.
+- **Versão Alentejo — Nico, o Podengo do Buinho Educativo** (decisão de 17 Out 2026, registo em `buinho-os`
+  `memory/sessoes/2026-10-17_nico-podengo-buinho-educativo.md`): mesma plataforma, conteúdo do Buinho Educativo
+  (Messejana, STEAM, natureza, maker, reparação) — **não copiar mecanicamente os desafios da Gabi**. Os 8 estados do
+  Nico mapeiam assim nos estados do motor: boas-vindas → `boas_vindas` · curioso → `curiosa` · a pensar → `a_pensar` ·
+  surpreendido → `surpreendida` · a dar uma dica → `dica` · a celebrar → `celebrar` · a inventar → `incentivar`
+  (ou novo estado para a extensão) · trapalhão/calmo → `calma` e pedido de gambiarra. Atenção ao género nos textos
+  (o Nico é «ele»). Sprites finais: 8 PNG RGBA, estilo 4 minimalista aprovado; não usar os GIF/ZIP anteriores.
