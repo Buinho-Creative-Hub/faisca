@@ -256,3 +256,15 @@ body {
   .gabi-texto { font-size: 16px; }
   .gabi { min-height: 108px; }
 }
+
+/* Enviar para o micro:bit (.hex) */
+.enviar-cartao { width: min(580px, calc(100vw - 32px)); text-align: left; }
+.enviar-cartao h2 { text-align: center; }
+.enviar-passos { margin: 0 0 16px; padding-left: 28px; font-size: 18px; line-height: 1.45; }
+.enviar-passos li { margin-bottom: 8px; }
+.enviar .festa-botoes, .enviar-cartao .festa-botoes { justify-content: flex-end; }
+.enviar-cartao .enviar-estado { min-height: 24px; margin: 0 0 16px; font-size: 16px; color: var(--cinza); }
+.enviar-cartao .enviar-estado.ok { color: #1a7f37; font-weight: 700; }
+.enviar-cartao .enviar-estado.erro { color: #b42318; }
+.btn-enviar { background: var(--sol); color: var(--tinta); }
+.btn-enviar:hover { background: #fff; }

@@ -17,7 +17,8 @@
   <nav class="caminho" id="caminho" aria-label="Desafios"></nav>
   <div class="ligacao">
     <span class="estado" id="estado" aria-live="polite">micro:bit do ecrã</span>
-    <button type="button" class="btn btn-claro" id="btnLigar">Ligar micro:bit</button>
+    <button type="button" class="btn btn-claro btn-bt" id="btnLigar" title="Ligar por Bluetooth">Bluetooth</button>
+    <button type="button" class="btn btn-enviar" id="btnEnviar">Enviar para o micro:bit</button>
   </div>
 </header>
 
@@ -79,6 +80,23 @@
   </div>
 </div>
 
+<div class="festa" id="enviar" hidden>
+  <div class="festa-cartao enviar-cartao" role="dialog" aria-modal="true" aria-labelledby="enviarTitulo">
+    <h2 id="enviarTitulo">Enviar para o micro:bit</h2>
+    <ol class="enviar-passos">
+      <li>Liga o micro:bit ao computador com o <strong>cabo USB</strong>.</li>
+      <li id="enviarPasso2">Carrega em <strong>Gravar</strong> e escolhe a pasta <strong>MICROBIT</strong>.</li>
+      <li>Espera que a luz amarela pare de piscar. Pronto, o programa já está lá dentro!</li>
+    </ol>
+    <p class="enviar-estado" id="enviarEstado" aria-live="polite"></p>
+    <div class="festa-botoes">
+      <button type="button" class="btn btn-texto" id="btnEnviarFechar">Fechar</button>
+      <button type="button" class="btn btn-claro" id="btnDescarregar">Descarregar ficheiro</button>
+      <button type="button" class="btn btn-escuro" id="btnGravar">Gravar</button>
+    </div>
+  </div>
+</div>
+
 <script src="vendor/blockly_compressed.js"></script>
 <script src="vendor/blockly-msg-pt.js"></script>
 <script src="js/blocks.js"></script>
@@ -90,6 +108,7 @@
 <script src="js/gabi-regras.js"></script>
 <script src="js/gabi-motor.js"></script>
 <script src="js/gabi-ui.js"></script>
+<script src="js/hex.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

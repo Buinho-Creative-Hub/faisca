@@ -34,9 +34,19 @@ Regras e mensagens em `js/gabi-regras.js`. Demonstração dos 8 estados em `gabi
 
 ## micro:bit do ecrã e micro:bit verdadeiro
 
-Os miúdos testam no micro:bit desenhado (botões A, B, A+B, Agitar, logotipo e pinos 0 e 1 são clicáveis). Com **Ligar micro:bit**, o mesmo programa passa a mexer também no micro:bit verdadeiro, por Bluetooth, e os botões, o agitar, o logotipo e os pinos da placa contam para os desafios.
+Os miúdos testam no micro:bit desenhado (botões A, B, A+B, Agitar, logotipo e pinos 0 e 1 são clicáveis). Os desafios são validados aí.
 
-Para isso, cada micro:bit V2 tem de ter **uma vez** o programa companheiro: <https://github.com/Buinho-Creative-Hub/microbit-desafios> (instruções no README desse repo; cópia em `microbit/faisca-companheiro.ts`).
+**Enviar para o micro:bit** (botão amarelo, em cima) passa o programa para o micro:bit verdadeiro por cabo USB, sem internet e sem preparar nada antes:
+
+1. ligar o micro:bit ao PC com o cabo USB (aparece a pasta **MICROBIT**);
+2. **Gravar** e escolher a pasta MICROBIT (Chrome/Edge); ou **Descarregar ficheiro** e arrastar o `faisca-desafio-N.hex` para a pasta MICROBIT;
+3. esperar que a luz amarela pare de piscar.
+
+Por dentro: os blocos são traduzidos para MicroPython (`js/hex.js`) e o `main.py` é metido no MicroPython oficial do micro:bit V2 (`vendor/micropython-v2.js`, com `vendor/microbit-fs.js`). Só funciona em micro:bit **V2** (sons e logotipo tátil).
+
+### Bluetooth (opcional)
+
+Com **Bluetooth**, o mesmo programa mexe ao vivo no micro:bit verdadeiro e os botões, o agitar, o logotipo e os pinos da placa contam para os desafios. Para isso, cada micro:bit V2 tem de ter **uma vez** o programa companheiro: <https://github.com/Buinho-Creative-Hub/microbit-desafios> (instruções no README desse repo; cópia em `microbit/faisca-companheiro.ts`).
 
 ## Ficheiros
 
@@ -47,6 +57,7 @@ Para isso, cada micro:bit V2 tem de ter **uma vez** o programa companheiro: <htt
 | `js/motor.js` | corre o programa (eventos, repetir, pausas) no ecrã e na placa |
 | `js/sim.js` | micro:bit no ecrã e sons |
 | `js/ble.js` | ligação Bluetooth ao programa companheiro |
+| `js/hex.js` | blocos → MicroPython → ficheiro `.hex` para o micro:bit |
 | `js/gabi-*.js` | a Gabi: leitura do programa, regras, motor pedagógico, painel |
 | `img/gabi/` | os 8 sprites da Gabi |
 | `vendor/` | Blockly 12 (Apache 2.0), local para funcionar offline |

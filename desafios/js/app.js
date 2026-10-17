@@ -48,7 +48,7 @@
     const el = $('estado');
     el.classList.toggle('ok', e === 'ligado');
     el.textContent = e === 'ligado' ? 'micro:bit verdadeiro ligado' : e === 'a ligar' ? 'a ligar…' : 'micro:bit do ecrã';
-    $('btnLigar').textContent = e === 'ligado' ? 'Desligar' : 'Ligar micro:bit';
+    $('btnLigar').textContent = e === 'ligado' ? 'Desligar' : 'Bluetooth';
     if (e === 'ligado') { ble.enviar('W' + (F.DESAFIOS[estado.atual].livre ? 1 : 0)); reiniciar(); }
   });
 
@@ -249,6 +249,55 @@
       $('estado').textContent = err && err.name === 'NotFoundError' ? 'micro:bit do ecrã' : 'Não ligou: ' + (err.message || err);
     }
   });
+
+  // ------------------------------------------------ Enviar para o micro:bit (.hex por USB)
+  let hexPronto = null;
+  const nomeHex = () => 'faisca-desafio-' + (estado.atual + 1) + '.hex';
+  const podeGravar = typeof window.showSaveFilePicker === 'function';
+  function estadoEnviar(txt, tipo = '') { const e = $('enviarEstado'); e.textContent = txt; e.className = 'enviar-estado ' + tipo; }
+  async function prepararHex() {
+    hexPronto = null;
+    estadoEnviar('A preparar o programa…');
+    $('btnGravar').disabled = $('btnDescarregar').disabled = true;
+    try {
+      hexPronto = await F.gerarHex(ws);
+      estadoEnviar('');
+    } catch (err) {
+      console.error(err);
+      estadoEnviar('Não consegui preparar o programa: ' + (err.message || err), 'erro');
+    }
+    $('btnGravar').disabled = $('btnDescarregar').disabled = !hexPronto;
+  }
+  function descarregar() {
+    if (!hexPronto) return;
+    const url = URL.createObjectURL(new Blob([hexPronto], { type: 'application/octet-stream' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = nomeHex();
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    estadoEnviar('Descarregado! Arrasta o ficheiro ' + nomeHex() + ' para a pasta MICROBIT.', 'ok');
+  }
+  $('btnGravar').hidden = !podeGravar;
+  if (!podeGravar) $('enviarPasso2').innerHTML = 'Carrega em <strong>Descarregar ficheiro</strong> e arrasta-o para a pasta <strong>MICROBIT</strong>.';
+  $('btnEnviar').addEventListener('click', () => { $('enviar').hidden = false; prepararHex(); });
+  $('btnEnviarFechar').addEventListener('click', () => { $('enviar').hidden = true; });
+  $('btnDescarregar').addEventListener('click', descarregar);
+  $('btnGravar').addEventListener('click', async () => {
+    if (!hexPronto) return;
+    try {
+      const f = await window.showSaveFilePicker({ suggestedName: nomeHex(), types: [{ description: 'Programa micro:bit', accept: { 'application/octet-stream': ['.hex'] } }] });
+      estadoEnviar('A gravar…');
+      const w = await f.createWritable();
+      await w.write(hexPronto);
+      await w.close();
+      estadoEnviar('Gravado! Quando a luz amarela parar, o micro:bit já tem o teu programa.', 'ok');
+    } catch (err) {
+      if (err && err.name === 'AbortError') { estadoEnviar(''); return; }
+      console.error(err);
+      estadoEnviar('Não deu para gravar assim. Carrega em «Descarregar ficheiro» e arrasta-o para a pasta MICROBIT.', 'erro');
+    }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') $('enviar').hidden = true; });
 
   mudarDesafio(estado.atual);
   window.addEventListener('resize', () => Blockly.svgResize(ws));
