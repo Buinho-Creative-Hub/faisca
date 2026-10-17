@@ -32,7 +32,7 @@ A **Gabi, a capivara da gambiarra**, é a tutora: observa o que a criança faz n
 - Convite discreto quando a criança está parada; pode ser recolhida a qualquer momento.
 - **«Ajudar a Gabi»**: num desafio já feito, a Gabi mostra uma gambiarra dela que não funciona e pede ajuda para a reparar.
 
-Regras e mensagens em `js/gabi-regras.js`. Demonstração dos 8 estados em `gabi-demo.html`. Testes e limitações em `TESTES-GABI.md`.
+Mascotes em `mascotes/`, missões (desafios e pistas) em `missoes/`. Demonstração dos estados em `estados.html` (`estados.html?a=nico` para o Nico). Testes e limitações em `TESTES-GABI.md`; testes automáticos: `node testes/testar.js`.
 
 ## micro:bit do ecrã e micro:bit verdadeiro
 
@@ -55,12 +55,16 @@ Com **Bluetooth**, o mesmo programa mexe ao vivo no micro:bit verdadeiro e os bo
 | Ficheiro | O que é |
 |---|---|
 | `js/blocks.js` | blocos e o renderer «makecode» (zelos com as medidas do MakeCode) |
-| `js/desafios.js` | os desafios — para criar outro, acrescenta-se um objecto à lista |
+| `mascotes/*.js` | quem acompanha: Gabi, Nico (perfil, voz, ilustrações, música) |
+| `missoes/*.js` | o conteúdo: missões → níveis → desafios, cada um com as suas pistas |
+| `js/escolha.js`, `js/inicio.js` | ecrã inicial: escolher mascote e missão (`index.html?a=nico&m=reparar` vai direto) |
+| `js/som.js` | música de fundo e efeitos sonoros (botões para desligar) |
+| `js/desafios.js` | base comum: blocos da caixa, verificação por comportamento, junção mascote × missão |
 | `js/motor.js` | corre o programa (eventos, repetir, pausas) no ecrã e na placa |
 | `js/sim.js` | micro:bit no ecrã e sons |
 | `js/ble.js` | ligação Bluetooth ao programa companheiro |
 | `js/hex.js` | blocos → MicroPython → ficheiro `.hex` para o micro:bit |
-| `js/gabi-*.js` | a Gabi: leitura do programa, regras, motor pedagógico, painel |
+| `js/tutor-*.js` | a mascote (qualquer uma): leitura do programa, motor pedagógico, painel |
 | `img/gabi/` | os 8 sprites da Gabi |
 | `vendor/` | Blockly 12 (Apache 2.0), local para funcionar offline |
 

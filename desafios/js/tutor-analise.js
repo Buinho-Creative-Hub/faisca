@@ -1,4 +1,4 @@
-/* Gabi — leitura do programa. Transforma o espaço de blocos numa estrutura simples
+/* Tutor (mascote) — leitura do programa. Transforma o espaço de blocos numa estrutura simples
  * que as regras pedagógicas conseguem interrogar, sem conhecerem o Blockly.
  * Não tem interface: pode ser testado sozinho.
  */
@@ -88,5 +88,12 @@
     return a;
   }
 
-  F.gabiAnalisar = analisar;
+  F.analisar = analisar;
+
+  // Ajudas para as regras das missões (lêem um evento da análise)
+  F.ajudasTutor = {
+    icones: (ev, nome) => ev ? ev.plano.filter(p => p.tipo === 'mk_icone' && (!nome || p.icone === nome)) : [],
+    tem: (ev, tipo) => !!ev && ev.plano.some(p => p.tipo === tipo),
+    soltoCom: (a, tipo) => a.soltosPlano().some(p => p.tipo === tipo),
+  };
 })();

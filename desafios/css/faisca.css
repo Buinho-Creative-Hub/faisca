@@ -38,6 +38,8 @@ body {
 }
 .marca { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
 .marca-icone { width: 32px; height: 32px; }
+.marca-icone-caixa { display: flex; }
+.marca-icone-caixa img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #fff; }
 .marca-nome { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
 .marca-sub { font-size: 14px; color: var(--sol); }
 
@@ -177,8 +179,8 @@ body {
   .editor { min-height: 560px; height: 94vh; }
 }
 
-/* ---------------------------------------------------------------- Gabi */
-.gabi {
+/* ---------------------------------------------------------------- Mascote (tutor) */
+.tutor {
   flex: 0 0 auto;
   display: flex;
   align-items: flex-end;
@@ -188,25 +190,25 @@ body {
   background: #fff;
   min-height: 148px;
 }
-.gabi-avatar {
+.tutor-avatar {
   flex: 0 0 auto;
   width: 150px; height: 140px;
   padding: 0; border: 0; background: none; cursor: pointer;
   position: relative;
   display: flex; align-items: flex-end; justify-content: center;
 }
-.gabi-avatar img { max-width: 100%; max-height: 100%; object-fit: contain; object-position: bottom; display: block; }
-.gabi-avatar:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
-.gabi-avatar[data-novo]::after {
+.tutor-avatar img { max-width: 100%; max-height: 100%; object-fit: contain; object-position: bottom; display: block; }
+.tutor-avatar:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.tutor-avatar[data-novo]::after {
   content: ''; position: absolute; top: 4px; right: 4px;
   width: 14px; height: 14px; border-radius: 50%;
   background: var(--vermelho); border: 2px solid #fff;
 }
-@keyframes gabiSalto { 0% { transform: translateY(0) } 35% { transform: translateY(-8px) } 70% { transform: translateY(0) } 85% { transform: translateY(-3px) } 100% { transform: translateY(0) } }
-.gabi-avatar.salto img { animation: gabiSalto 520ms ease-out; }
-@media (prefers-reduced-motion: reduce) { .gabi-avatar.salto img { animation: none; } }
+@keyframes tutorSalto { 0% { transform: translateY(0) } 35% { transform: translateY(-8px) } 70% { transform: translateY(0) } 85% { transform: translateY(-3px) } 100% { transform: translateY(0) } }
+.tutor-avatar.salto img { animation: tutorSalto 520ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .tutor-avatar.salto img { animation: none; } }
 
-.gabi-balao {
+.tutor-balao {
   flex: 1 1 auto;
   align-self: center;
   position: relative;
@@ -217,44 +219,44 @@ body {
   border-radius: 12px;
   min-width: 0;
 }
-.gabi-balao::before {
+.tutor-balao::before {
   content: ''; position: absolute; left: -13px; bottom: 22px;
   border: 12px solid transparent; border-right-color: var(--tinta); border-left: 0;
 }
-.gabi-balao::after {
+.tutor-balao::after {
   content: ''; position: absolute; left: -9px; bottom: 24px;
   border: 10px solid transparent; border-right-color: #fff; border-left: 0;
 }
-.gabi-balao.tipo-convite { border-style: dashed; }
-.gabi-balao.tipo-convite .gabi-texto { color: var(--cinza); font-weight: 400; }
-.gabi-balao.tipo-correcao, .gabi-balao.tipo-sucesso { background: #fff8e3; }
-.gabi-balao.tipo-correcao::after, .gabi-balao.tipo-sucesso::after { border-right-color: #fff8e3; }
-.gabi-cabeca { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
-.gabi-nome { font-size: 13px; font-weight: 700; color: var(--azul); }
-.gabi-nivel { display: inline-flex; gap: 4px; }
-.gabi-nivel span { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--tinta); }
-.gabi-nivel span.on { background: var(--sol); }
-.gabi-texto { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.35; }
+.tutor-balao.tipo-convite { border-style: dashed; }
+.tutor-balao.tipo-convite .tutor-texto { color: var(--cinza); font-weight: 400; }
+.tutor-balao.tipo-correcao, .tutor-balao.tipo-sucesso { background: #fff8e3; }
+.tutor-balao.tipo-correcao::after, .tutor-balao.tipo-sucesso::after { border-right-color: #fff8e3; }
+.tutor-cabeca { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
+.tutor-nome { font-size: 13px; font-weight: 700; color: var(--azul); }
+.tutor-nivel { display: inline-flex; gap: 4px; }
+.tutor-nivel span { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--tinta); }
+.tutor-nivel span.on { background: var(--sol); }
+.tutor-texto { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.35; }
 
-.gabi-acoes { flex: 0 0 auto; align-self: center; display: flex; flex-direction: column; gap: 8px; padding-bottom: 6px; }
-.gabi-fechar {
+.tutor-acoes { flex: 0 0 auto; align-self: center; display: flex; flex-direction: column; gap: 8px; padding-bottom: 6px; }
+.tutor-fechar {
   min-height: 36px; border: 0; background: none; color: var(--cinza);
   font: 700 14px 'Asap', sans-serif; text-decoration: underline; cursor: pointer;
 }
 
 /* recolhida: só a cabeça e o botão de ajuda */
-.gabi.recolhida { min-height: 0; padding: 4px 16px; align-items: center; }
-.gabi.recolhida .gabi-avatar { width: 60px; height: 56px; }
-.gabi.recolhida .gabi-balao, .gabi.recolhida .gabi-fechar, .gabi.recolhida #gabiGambiarra { display: none; }
-.gabi.recolhida .gabi-acoes { flex-direction: row; padding: 0; }
+.tutor.recolhida { min-height: 0; padding: 4px 16px; align-items: center; }
+.tutor.recolhida .tutor-avatar { width: 60px; height: 56px; }
+.tutor.recolhida .tutor-balao, .tutor.recolhida .tutor-fechar, .tutor.recolhida #tutorGambiarra { display: none; }
+.tutor.recolhida .tutor-acoes { flex-direction: row; padding: 0; }
 
-.festa-gabi { width: 150px; height: auto; animation: salto 600ms ease-out; }
+.festa-mascote { width: 150px; height: auto; animation: salto 600ms ease-out; }
 .festa-extra { margin: -8px 0 22px !important; font-size: 16px !important; color: var(--cinza); }
 
 @media (max-width: 900px) {
-  .gabi-avatar { width: 96px; height: 92px; }
-  .gabi-texto { font-size: 16px; }
-  .gabi { min-height: 108px; }
+  .tutor-avatar { width: 96px; height: 92px; }
+  .tutor-texto { font-size: 16px; }
+  .tutor { min-height: 108px; }
 }
 
 /* Enviar para o micro:bit (.hex) */
@@ -268,3 +270,91 @@ body {
 .enviar-cartao .enviar-estado.erro { color: #b42318; }
 .btn-enviar { background: var(--sol); color: var(--tinta); }
 .btn-enviar:hover { background: #fff; }
+
+/* ---------------------------------------------------------------- tema Nico (Buinho Educativo)
+   Creme, azul e laranja do Buinho Educativo. Os blocos mantêm as cores do MakeCode. */
+html[data-mascote="nico"] {
+  --azul: #2038a6;
+  --azul-escuro: #172a80;
+  --sol: #fa6415;
+  --parede: #faf0e1;
+}
+html[data-mascote="nico"] .topo { background: var(--azul); }
+html[data-mascote="nico"] .tutor-balao.tipo-correcao,
+html[data-mascote="nico"] .tutor-balao.tipo-sucesso { background: #fff3e6; }
+html[data-mascote="nico"] .tutor-balao.tipo-correcao::after,
+html[data-mascote="nico"] .tutor-balao.tipo-sucesso::after { border-right-color: #fff3e6; }
+html[data-mascote="nico"] .passo.feito { background: #fff; border-color: #fff; color: var(--azul); }
+html[data-mascote="nico"] .passo.feito + .passo::before { background: #fff; }
+html[data-mascote="nico"] .passo.atual { box-shadow: 0 0 0 4px rgba(250, 100, 21, 0.3); }
+
+/* ---------------------------------------------------------------- missões, níveis e som */
+.btn-missoes {
+  display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto;
+  color: var(--parede); text-decoration: none; font-weight: 700; font-size: 14px;
+  padding: 8px 10px; border: 2px solid rgba(255,255,255,0.35); border-radius: 4px;
+}
+.btn-missoes svg { width: 18px; height: 18px; }
+.btn-missoes:hover, .btn-missoes:focus-visible { border-color: #fff; outline: none; }
+.passo.novo-nivel { margin-left: 46px; }
+.passo.novo-nivel::before { background: repeating-linear-gradient(90deg, rgba(255,255,255,0.6) 0 4px, transparent 4px 8px) !important; }
+.sons { display: flex; gap: 6px; }
+.btn-som {
+  width: 38px; height: 38px; display: grid; place-items: center; cursor: pointer;
+  background: transparent; color: var(--parede); border: 2px solid rgba(255,255,255,0.35); border-radius: 50%;
+}
+.btn-som svg { width: 20px; height: 20px; }
+.btn-som[aria-pressed="false"] { opacity: 0.45; }
+.btn-som[aria-pressed="false"]::after { content: ''; position: absolute; width: 26px; height: 2px; background: currentColor; transform: rotate(-45deg); }
+.btn-som { position: relative; }
+.btn-som:hover, .btn-som:focus-visible { border-color: #fff; outline: none; }
+.enviar-nota { margin: 0 0 12px; font-size: 14px; color: var(--cinza); }
+
+/* ---------------------------------------------------------------- ecrã inicial */
+body.modo-inicio > .topo, body.modo-inicio > .palco { display: none; }
+.inicio { position: fixed; inset: 0; overflow: auto; background: var(--parede); display: flex; flex-direction: column; }
+.inicio[hidden] { display: none; }
+.inicio-topo { flex: 0 0 auto; height: 68px; padding: 0 20px; display: flex; align-items: center; gap: 10px; background: var(--tinta); color: var(--parede); }
+html[data-mascote="nico"] .inicio-topo { background: var(--azul); }
+.inicio-topo .espaco { flex: 1; }
+.inicio-corpo { width: 100%; max-width: 1180px; margin: 0 auto; padding: 28px 20px 48px; }
+.inicio h1 { font-size: 34px; margin: 0 0 14px; }
+.inicio h2 { font-size: 26px; margin: 34px 0 14px; }
+.mascotes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.cartao-mascote {
+  display: flex; align-items: center; gap: 16px; text-align: left; cursor: pointer;
+  background: #fff; border: 3px solid var(--linha); border-radius: 10px; padding: 14px 18px; font: inherit; color: inherit;
+  transition: border-color 120ms, transform 120ms;
+}
+.cartao-mascote img { width: 120px; height: 110px; object-fit: contain; flex: 0 0 auto; }
+.cartao-mascote:hover { transform: translateY(-2px); }
+.cartao-mascote[aria-checked="true"] { border-color: var(--azul); box-shadow: 0 0 0 4px rgba(35, 100, 255, 0.15); }
+.cartao-mascote:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.cm-texto { display: flex; flex-direction: column; gap: 4px; }
+.cm-texto strong { font-size: 24px; }
+.cm-texto em { font-style: normal; color: var(--azul); font-weight: 700; font-size: 15px; }
+.cm-perfil { font-size: 15px; color: var(--cinza); line-height: 1.35; }
+.missoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+.cartao-missao {
+  position: relative; display: flex; flex-direction: column; gap: 6px; text-align: left; cursor: pointer;
+  background: #fff; border: 2px solid var(--linha); border-top: 8px solid var(--cor); border-radius: 10px;
+  padding: 16px 18px 18px; font: inherit; color: inherit; min-height: 210px;
+  transition: transform 120ms, box-shadow 120ms;
+}
+.cartao-missao:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+.cartao-missao:focus-visible { outline: 3px solid var(--cor); outline-offset: 2px; }
+.cartao-missao strong { font-size: 24px; }
+.cx-tema { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--cor); }
+.cx-desc { font-size: 15px; line-height: 1.35; color: var(--tinta); flex: 1; }
+.cx-niveis { font-size: 13px; color: var(--cinza); }
+.cx-barra { height: 8px; background: var(--linha); border-radius: 4px; overflow: hidden; }
+.cx-barra span { display: block; height: 100%; background: var(--cor); }
+.cx-feito { align-self: flex-start; margin-top: 4px; font-weight: 700; font-size: 15px; padding: 6px 12px; border-radius: 4px; background: var(--cor); color: #fff; }
+.cartao-missao.em-preparacao { cursor: default; opacity: 0.55; border-top-style: dashed; }
+.cartao-missao.em-preparacao:hover { transform: none; box-shadow: none; }
+.cartao-missao.em-preparacao .cx-feito { background: transparent; color: var(--cinza); border: 2px dashed var(--linha); }
+@media (max-width: 700px) { .cartao-mascote img { width: 84px; height: 80px; } .inicio h1 { font-size: 28px; } }
+/* barra do topo: o estado só aparece quando há micro:bit verdadeiro ligado (ganha espaço para missões e som) */
+.topo .estado:not(.ok):not(.aviso) { display: none; }
+.passo.novo-nivel { margin-left: 34px; }
+@media (max-width: 1400px) { .topo .marca-sub { display: none; } .topo { gap: 16px; } }

@@ -35,12 +35,12 @@ Testes de 17 Out 2026, corridos automaticamente num Chrome (headless) sobre a Fa
 
 | Ficheiro | Papel |
 |---|---|
-| `js/gabi-analise.js` | Lê o programa (eventos, blocos soltos, o que está dentro de quê). Não tem interface. |
-| `js/gabi-regras.js` | **Configuração**: regras e mensagens por desafio, com 3 níveis de pista, mensagens de correcção, sucesso, extensão e a gambiarra da Gabi. Editar aqui para mudar o que a Gabi diz. |
-| `js/gabi-motor.js` | Motor pedagógico: decide quando falar (teste falhado, pedido de ajuda, correcção, inactividade, «agora experimenta», calma). Não toca na interface. |
-| `js/gabi-ui.js` | Painel, balão, sprites, recolher/mostrar. |
+| `js/tutor-analise.js` | Lê o programa (eventos, blocos soltos, o que está dentro de quê). Não tem interface. |
+| `missoes/primeiros-passos.js` + `mascotes/gabi.js` | **Configuração**: regras e mensagens por desafio, com 3 níveis de pista, mensagens de correcção, sucesso, extensão e a gambiarra da Gabi. Editar aqui para mudar o que a Gabi diz. (Missões em `missoes/`, mascotes em `mascotes/`.) |
+| `js/tutor-motor.js` | Motor pedagógico: decide quando falar (teste falhado, pedido de ajuda, correcção, inactividade, «agora experimenta», calma). Não toca na interface. |
+| `js/tutor-ui.js` | Painel, balão, sprites, recolher/mostrar. |
 | `img/gabi/` | Os 8 sprites aprovados, recortados da folha enviada. |
-| `gabi-demo.html` | Demonstração dos 8 estados e de quando aparecem. |
+| `estados.html` | Demonstração dos estados e de quando aparecem (`?a=nico` para o Nico). |
 
 Sem API paga e sem IA generativa: tudo corre no browser, também sem internet.
 

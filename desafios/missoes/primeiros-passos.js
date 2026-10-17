@@ -1,43 +1,28 @@
-/* Gabi — regras e mensagens de cada desafio.
+/* Missão «Primeiros passos» — programação e robótica com o micro:bit.
  *
- * Cada regra descreve uma dificuldade que se reconhece no programa:
+ * Os 6 desafios da Faísca Desafios (16–17 Out 2026, testados com micro:bit V2) + o desafio livre.
+ * Conteúdo da primeira versão com a Gabi, agora escrito para qualquer mascote ({ola}, [o|a]).
+ *
+ * Cada regra pedagógica descreve uma dificuldade que se reconhece no programa:
  *   id         nome curto
  *   ativa(a)   true quando a dificuldade está presente (a = análise do programa)
  *   pistas     três níveis: [estado do sprite, texto]
  *                1 pista conceptual · 2 pista orientadora · 3 ajuda concreta
- *   corrigido  o que a Gabi diz quando a criança resolve sozinha
+ *   corrigido  o que a mascote diz quando a criança resolve sozinha
  * As regras são lidas pela ordem: a primeira activa é a que conta.
- * O sucesso NÃO é decidido aqui: é o comportamento do programa (desafios.js).
- *
- * Estados do sprite: boas_vindas, curiosa, a_pensar, surpreendida, dica, celebrar, incentivar, calma
+ * O sucesso NÃO é decidido nas regras: é o comportamento do programa (ok).
  */
 (function () {
   'use strict';
-  const F = window.Faisca = window.Faisca || {};
+  const F = window.Faisca;
+  const { icones, tem, soltoCom } = F.ajudasTutor;
+  const { depois, visiveis, algumPino } = F.verif;
 
-  // ------------------------------------------------------------ ajudas
-  const icones = (ev, nome) => ev ? ev.plano.filter(p => p.tipo === 'mk_icone' && (!nome || p.icone === nome)) : [];
-  const tem = (ev, tipo) => !!ev && ev.plano.some(p => p.tipo === tipo);
-  const soltoCom = (a, tipo) => a.soltosPlano().some(p => p.tipo === tipo);
-
-  // Regras comuns a todos os desafios (vêm depois das específicas)
-  const COMUNS = [
-    {
-      id: 'blocos_soltos',
-      ativa: a => a.soltos.length > 0,
-      pistas: [
-        ['a_pensar', 'Tens blocos soltos na área cinzenta. Será que eles sabem quando começar?'],
-        ['dica', 'Os blocos que fazem coisas só correm se estiverem dentro de um bloco cor-de-rosa.'],
-        ['dica', 'Arrasta os blocos soltos para dentro da boca de um bloco cor-de-rosa.'],
-      ],
-      corrigido: 'Isso! Agora esses blocos já sabem quando começar.',
-    },
-  ];
-
-  const DESAFIOS = [
+  // ------------------------------------------------------------ pistas (pela ordem dos desafios)
+  const TUTOR = [
     // ---------------------------------------------------------- 1 · Acorda-o
     {
-      boasVindas: ['boas_vindas', 'Olá! Sou a Gabi, a capivara da gambiarra. Vamos acordar este micro:bit? Quero vê-lo sorrir quando o agitas.'],
+      boasVindas: ['boas_vindas', '{ola} Vamos acordar este micro:bit? Quero vê-lo sorrir quando o agitas.'],
       parecePronto: a => icones(a.evento('agitar'), 'Happy').length > 0,
       testar: 'Parece-me bem! Mas só acredito vendo: carrega em AGITAR.',
       regras: [
@@ -392,15 +377,92 @@
     },
   ];
 
-  // Mensagens que não dependem do desafio
-  const GERAIS = {
-    convite: ['curiosa', 'Precisas de uma ajudinha? Carrega em «Ajuda».'],
-    calma: ['calma', 'Respira fundo… Não funcionou à primeira? A mim também não. Queres uma pista?'],
-    semPistas: ['incentivar', 'Estás no bom caminho. Experimenta e vê o que acontece!'],
-    vazio: ['curiosa', 'A área cinzenta está vazia. Que tal arrastar o primeiro bloco da coluna branca?'],
-    testeFalhou: ['a_pensar', 'Hmm… ainda não é bem isso. Olha para o micro:bit: o que é que ele fez?'],
-    gambiarraObrigada: ['celebrar', 'Obrigada! Reparaste a minha gambiarra. És mesmo maker!'],
-  };
+  // ------------------------------------------------------------ desafios (o que se pede e como se valida)
+  const DESAFIOS = [
+    {
+      titulo: 'Acorda-o',
+      missao: 'Faz o micro:bit sorrir quando o agitas.',
+      passos: ['Arrasta o bloco «em agitar».', 'Põe lá dentro «mostrar ícone» com a cara contente.', 'Experimenta: carrega em AGITAR.'],
+      material: 'micro:bit',
+      novos: ['mk_agitar', 'mk_icone'],
+      teste: 'agitar',
+      ok: r => depois(r, 'agitar', s => s.includes('icone:Happy')),
+    },
+    {
+      titulo: 'Coração a bater',
+      missao: 'Quando tocas no logótipo, o coração bate 4 vezes.',
+      passos: ['O logotipo é o desenho dourado lá em cima.', 'Dentro de «repetir 4 vezes»: coração, pausa, coração pequeno, pausa.', 'Experimenta: toca no logótipo.'],
+      material: 'micro:bit V2',
+      novos: ['mk_logo', 'mk_repetir', 'mk_icone_coracao', 'mk_icone_pequeno', 'mk_pausa'],
+      teste: 'logo',
+      ok: r => visiveis(r, 'logo', 'Heart') >= 4 && visiveis(r, 'logo', 'SmallHeart') >= 4,
+    },
+    {
+      titulo: 'Sim ou não?',
+      missao: 'Botão A: cara contente. Botão B: cara triste.',
+      passos: ['Usa dois blocos «no botão premido».', 'No segundo, muda a letra para B.', 'Experimenta os dois botões.'],
+      material: 'micro:bit',
+      novos: ['mk_botao', 'mk_botao_B', 'mk_icone_triste'],
+      teste: 'botao:A',
+      ok: r => depois(r, 'botao:A', s => s.includes('icone:Happy')) && depois(r, 'botao:B', s => s.includes('icone:Sad')),
+    },
+    {
+      titulo: 'Faz barulho',
+      missao: 'Carrega no A e no B ao mesmo tempo e o micro:bit ri-se.',
+      passos: ['Usa «no botão A+B premido».', 'Põe lá dentro «tocar som».', 'Escolhe o som que quiseres.'],
+      material: 'micro:bit V2 (altifalante)',
+      novos: ['mk_botao_AB', 'mk_som'],
+      teste: 'botao:AB',
+      ok: r => depois(r, 'botao:AB', s => s.some(x => x.startsWith('som:'))),
+    },
+    {
+      titulo: 'Piano de fruta',
+      missao: 'Toca numa banana e o micro:bit toca uma nota.',
+      passos: ['Crocodilo do pin 1 à banana (ou a papel de alumínio).', 'Outro crocodilo no GND, seguro na mão.', 'Usa «no pin P1 premido» com «tocar tom».'],
+      material: '2 crocodilos + uma fruta',
+      novos: ['mk_pino_tocado', 'mk_tom'],
+      teste: 'pino:P1',
+      ok: r => algumPino(r, s => s.some(x => x.startsWith('tom:'))),
+    },
+    {
+      titulo: 'Luz de fora',
+      missao: 'Quando a banana toca, acende-se uma luz de fora.',
+      passos: ['LED com crocodilos: perna comprida no pin 2, perna curta no GND.', '«gravação digital pin P2 para 1» antes da nota, «para 0» depois.', 'Experimenta: toca no pin 1.'],
+      material: 'LED + 2 crocodilos',
+      novos: ['mk_digital_1', 'mk_digital_0'],
+      teste: 'pino:P1',
+      // aceita qualquer pino de saída: o que conta é acender, tocar e apagar
+      ok: r => algumPino(r, s => {
+        const a = s.findIndex(x => /^digital:P\d:1$/.test(x));
+        if (a < 0) return false;
+        const pino = s[a].split(':')[1];
+        const n = s.findIndex((x, i) => i > a && x.startsWith('tom:'));
+        return n > a && s.indexOf('digital:' + pino + ':0', n) > n;
+      }),
+    },
+    {
+      titulo: 'Inventa',
+      missao: 'Agora é contigo: inventa o teu brinquedo.',
+      passos: ['Tens todos os blocos, mais «para sempre» e «se… então… senão».', 'Experimenta «se está escuro»: no ecrã, carrega em APAGAR A LUZ.'],
+      material: 'o que tiveres',
+      novos: ['mk_sempre', 'mk_se', 'mk_escuro', 'mk_botao_premido', 'mk_limpar'],
+      livre: true,
+      ok: () => false,
+    },
+  ];
 
-  F.GABI = { DESAFIOS, COMUNS, GERAIS };
+  const D = DESAFIOS.map((d, i) => Object.assign(d, { tutor: TUTOR[i] }));
+  F.registarMissao({
+    id: 'primeiros-passos',
+    titulo: 'Primeiros passos',
+    tema: 'Programação e robótica',
+    descricao: 'Acorda o micro:bit, faz um coração bater, um piano de fruta e uma luz de fora.',
+    cor: '#2364ff',
+    chave: 'faisca.desafios.v1',     // o progresso que já estava guardado continua a valer
+    niveis: [
+      { nome: 'Nível 1 · Primeiros sinais', desafios: D.slice(0, 3) },
+      { nome: 'Nível 2 · Som e circuitos', desafios: D.slice(3, 6) },
+      { nome: 'Livre', desafios: D.slice(6) },
+    ],
+  });
 })();
