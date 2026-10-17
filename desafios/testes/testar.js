@@ -47,7 +47,7 @@ async function testarMissao(browser, p, a, comPython) {
   const page = await browser.newPage();
   const erros = [];
   // erros de OUTRAS missões (ficheiros a meio de serem escritos) não contam para esta
-  page.on('pageerror', e => { const st = String(e.stack || e); if (/\/missoes\//.test(st) && !st.includes('/missoes/' + p + '.js')) return; erros.push(String(e)); });
+  page.on('pageerror', e => { const st = String(e.stack || e); if (/\/missoes\//.test(st) && !st.includes('/missoes/' + p + '.js')) return; if (e.name === 'SyntaxError' && !st.includes('/missoes/' + p + '.js') && process.env.PARALELO) return; erros.push(String(e)); });
   await page.goto(url(p, a));
   await page.waitForFunction(() => window.Faisca && window.Faisca.app);
   const falhas = [];

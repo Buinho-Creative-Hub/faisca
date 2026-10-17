@@ -266,3 +266,20 @@ Para as missões Toy hacking, Citizen sensing, Matemática, Natureza e o alargam
 - **Caixa:** cumulativa por defeito; um desafio pode fixá-la com `caixa: [...]` para não crescer demais.
 - **Testes:** um ficheiro de casos por missão em `testes/casos/`; `testes/testar.js` valida também que o MicroPython
   gerado é válido; `testes/blocos-novos.js` testa cada bloco novo no ecrã e em Python.
+
+## 9. Estrutura das missões: 3 níveis × 12 (desde 17 Out 2026, noite — pedido do Carlos)
+
+- **Cada nível tem 12 atividades:** 1–6 curtas (aquecer, 5–10 min) · **7–11 projetos complexos de 15–20 min**
+  (várias partes, construção física, condição/variável a acertar; a validação só passa com o projeto todo a funcionar) ·
+  **12 = projeto livre**, gerado pelo motor (`criarLivres` em `js/desafios.js`).
+- **Blocos do projeto livre crescem:** nível 1 → os blocos do nível 1; nível 2 → os dos níveis 1 e 2; último nível →
+  **todos os blocos da plataforma** (`F.TODOS_BLOCOS`), numa coluna com secções por gaveta (Básico, Entrada, Música…).
+  Textos opcionais por nível em `missao.livres`.
+- **Desbloqueio:** acabar o 11.º abre ao mesmo tempo o projeto livre e o nível seguinte (o livre nunca bloqueia).
+- **Topo:** separadores «Nível 1 · 2 · 3» e só os 12 passos do nível actual; festa própria ao acabar um nível/missão.
+- **Missões (6 × 33 guiadas + 3 livres):** Primeiros passos (os 6 testados no início dos níveis 1 e 2) · Reparar ·
+  Toy hacking · Citizen sensing · Matemática · Natureza.
+- **Testes:** um caso por atividade guiada (198), cada um com a solução, a gambiarra e outro programa errado, regras
+  caso a caso, «parece pronto», Python válido, .hex e voz — 6 missões × 2 mascotes.
+- **Para saber:** um texto longo a passar no ecrã bloqueia o botão até acabar (como no micro:bit); as validações
+  de sensores só olham para as saídas até à entrada seguinte.
