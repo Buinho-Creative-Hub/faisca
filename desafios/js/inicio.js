@@ -1,4 +1,4 @@
-/* Faísca Desafios — ecrã inicial (escolher mascote e missão) e botões de som.
+/* Nico (Faísca Desafios) — ecrã inicial (escolher mascote e missão) e botões de som.
  * Sem missão escolhida (?m=), mostra este ecrã; com missão, quem manda é o app.js.
  */
 (function () {

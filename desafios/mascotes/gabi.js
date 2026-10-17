@@ -18,10 +18,11 @@
       dica: '05_a_dar_uma_dica', celebrar: '06_a_celebrar', incentivar: '07_a_incentivar', calma: '08_calma',
       testar: '02_curiosa', inventar: '07_a_incentivar',
     },
+    // a plataforma chama-se Nico (homenagem ao podengo da rua do Buinho); a marca é a mesma com qualquer mascote
     marca: {
-      nome: 'Faísca',
+      nome: 'Nico',
       sub: 'desafios micro:bit',
-      icone: '<svg class="marca-icone" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#2364ff"/><path d="M18 4 8 18h7l-2 10 11-15h-7z" fill="#ffc850"/></svg>',
+      icone: '<img src="img/nico/01_boas_vindas.png" alt="" aria-hidden="true">',
     },
     // som: a voz é um «blip» curto quando fala; a música é um ritmo calmo e balançado
     som: { voz: 330, musica: 'gabi' },

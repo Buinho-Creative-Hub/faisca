@@ -1,4 +1,4 @@
-/* Faísca Desafios — cola tudo: mascote + missão escolhidas, editor, micro:bit do ecrã e o verdadeiro. */
+/* Nico (Faísca Desafios) — cola tudo: mascote + missão escolhidas, editor, micro:bit do ecrã e o verdadeiro. */
 (function () {
   'use strict';
   const F = window.Faisca;
@@ -378,7 +378,7 @@
 
   // ------------------------------------------------ Enviar para o micro:bit (.hex por USB)
   let hexPronto = null;
-  const nomeHex = () => (X.hex || X.id) + '-desafio-' + (estado.atual + 1) + '.hex';
+  const nomeHex = () => 'nico-' + X.id + '-' + (estado.atual + 1) + '.hex';
   const podeGravar = typeof window.showSaveFilePicker === 'function';
   function estadoEnviar(txt, tipo = '') { const e = $('enviarEstado'); e.textContent = txt; e.className = 'enviar-estado ' + tipo; }
   async function prepararHex() {

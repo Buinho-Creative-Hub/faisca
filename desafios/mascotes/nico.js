@@ -22,7 +22,7 @@
     },
     marca: {
       nome: 'Nico',
-      sub: 'desafios do Buinho Educativo',
+      sub: 'desafios micro:bit',
       icone: '<img src="img/nico/01_boas_vindas.png" alt="" aria-hidden="true">',
     },
     som: { voz: 523, musica: 'nico' },
